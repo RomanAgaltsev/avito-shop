@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"fmt"
+	"github.com/RomanAgaltsev/avito-shop/internal/app/avitoshop/service/shop"
 	"net/http"
 
 	"github.com/go-chi/chi/v5"
@@ -18,7 +19,7 @@ const ContentTypeJSON = "application/json"
 var ErrRunAddressIsEmpty = fmt.Errorf("configuration: HTTP server run address is empty")
 
 // New creates new http server with middleware and routes.
-func New(cfg *config.Config) (*http.Server, error) {
+func New(cfg *config.Config, service shop.Service) (*http.Server, error) {
 	if cfg.RunAddress == "" {
 		return nil, ErrRunAddressIsEmpty
 	}
