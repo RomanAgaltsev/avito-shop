@@ -11,6 +11,7 @@ import (
 type Service interface {
     UserRegister(ctx context.Context, user model.User) error
     UserLogin(ctx context.Context, user model.User) error
+    UserBalance(ctx context.Context, user model.User) error
 }
 
 // Repository is the user service repository interface.
@@ -40,5 +41,10 @@ func (s *service) UserRegister(ctx context.Context, user model.User) error {
 
 // UserLogin logins existed user.
 func (s *service) UserLogin(ctx context.Context, user model.User) error {
+    return nil
+}
+
+// UserBalance creates new user balance.
+func (s *service) UserBalance(ctx context.Context, user model.User) error {
     return nil
 }

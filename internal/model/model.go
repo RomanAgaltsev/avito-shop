@@ -22,6 +22,16 @@ func (u *User) Bind(r *http.Request) error {
 	return nil
 }
 
+// AuthResponse contains Auth hanlder response.
+type AuthResponse struct {
+	Token string `json:"token"`
+}
+
+// Render tunes rendering of AuthResponse structure.
+func (ar *AuthResponse) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
 // Info is a structure, that contains information about users
 // coins, inventory and transaction history.
 type Info struct {

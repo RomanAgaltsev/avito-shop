@@ -67,7 +67,7 @@ func (h *Handler) Auth(w http.ResponseWriter, r *http.Request) {
 
 	// Generate JWT token
 	ja := auth.NewAuth(h.cfg.SecretKey)
-	_, tokenString, err := auth.NewJWTToken(ja, usr.Login)
+	_, tokenString, err := auth.NewJWTToken(ja, usr.UserName)
 	if err != nil {
 		// Something has gone wrong
 		slog.Info(msgNewJWTToken, argError, err.Error())
@@ -75,6 +75,17 @@ func (h *Handler) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	render.Status(r, http.StatusOK)
+
+	authResponse := model.AuthResponse{
+		Token: tokenString,
+	}
+
+	// Render the list of orders to response
+	if err = render.Render(w, r, &authResponse); err != nil {
+		_ = render.Render(w, r, ErrorRenderer(err))
+		return
+	}
 }
 
 // SendCoin handles send coins request.
