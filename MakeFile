@@ -1,0 +1,20 @@
+# ==============================================================================
+
+#  Local commands
+
+.PHONY: test
+test:	# Execute the unit tests
+	go test -count=1 -v -timeout 30s -coverprofile cover.out ./...
+
+.PHONY: tidy
+tidy:	# Cleanup go.mod
+	go mod tidy
+
+
+.PHONY: fmt
+fmt:	# Format *.go and *.proto files using gofmt and clang-format
+	gofmt -w .
+
+.PHONY: cover
+cover:	# Show the cover report
+	go tool cover -html cover.out
