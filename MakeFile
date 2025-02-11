@@ -18,3 +18,9 @@ fmt:	# Format *.go and *.proto files using gofmt and clang-format
 .PHONY: cover
 cover:	# Show the cover report
 	go tool cover -html cover.out
+
+.PHONY: update
+update:	# Update dependencies as recorded in the go.mod and go.sum files
+	go list -m -u all
+	go get -u ./...
+	go mod tidy
