@@ -1,9 +1,25 @@
 package model
 
+import (
+	"fmt"
+	"net/http"
+)
+
 // User is a user structure.
 type User struct {
 	UserName string `json:"username"`
 	Password string `json:"password"`
+}
+
+// Bind validates user structure.
+func (u *User) Bind(r *http.Request) error {
+	if u.UserName == "" {
+		return fmt.Errorf("login is a required field")
+	}
+	if u.Password == "" {
+		return fmt.Errorf("password is a required field")
+	}
+	return nil
 }
 
 // Info is a structure, that contains information about users
