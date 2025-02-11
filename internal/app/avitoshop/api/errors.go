@@ -10,6 +10,8 @@ var (
 	ErrBadRequest          = &ErrorResponse{StatusCode: 400, Message: "Bad request"}
 	ErrWrongLoginPassword  = &ErrorResponse{StatusCode: 401, Message: "Wrong login/password"}
 	ErrNotEnoughCoins      = &ErrorResponse{StatusCode: 402, Message: "Not enough coins"}
+	ErrNotFound            = &ErrorResponse{StatusCode: 404, Message: "Resource not found"}
+	ErrMethodNotAllowed    = &ErrorResponse{StatusCode: 405, Message: "Method not allowed"}
 	ErrLoginIsAlreadyTaken = &ErrorResponse{StatusCode: 409, Message: "Login has already been taken"}
 )
 

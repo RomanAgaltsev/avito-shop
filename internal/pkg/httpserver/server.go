@@ -2,19 +2,12 @@ package httpserver
 
 import (
 	"fmt"
-	"github.com/RomanAgaltsev/avito-shop/internal/app/avitoshop/service/shop"
 	"net/http"
 
-	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
-	//"github.com/go-chi/jwtauth/v5"
-	"github.com/go-chi/render"
-
+	"github.com/RomanAgaltsev/avito-shop/internal/app/avitoshop/api"
+	"github.com/RomanAgaltsev/avito-shop/internal/app/avitoshop/service/shop"
 	"github.com/RomanAgaltsev/avito-shop/internal/config"
-	"github.com/RomanAgaltsev/avito-shop/internal/logger"
 )
-
-const ContentTypeJSON = "application/json"
 
 var ErrRunAddressIsEmpty = fmt.Errorf("configuration: HTTP server run address is empty")
 
@@ -25,50 +18,14 @@ func New(cfg *config.Config, service shop.Service) (*http.Server, error) {
 	}
 
 	// Create handler
-	//handle := api.NewHandler(cfg)
+	handle := api.NewHandler(cfg, service)
 
 	// Create router
-	router := chi.NewRouter()
+	router := api.NewRouter(cfg, handle)
 
-	// Enable common middleware
-	router.Use(logger.NewRequestLogger())
-	router.Use(middleware.Recoverer)
-	router.Use(middleware.Compress(5, ContentTypeJSON))
-	router.Use(render.SetContentType(render.ContentTypeJSON))
-
-	// Replace default handlers
-	router.MethodNotAllowed(methodNotAllowedHandler)
-	router.NotFound(notFoundHandler)
-
-	/*
-		Set routes
-	*/
-
-	// Public routes
-	router.Group(func(r chi.Router) {
-
-	})
-	// Protected routes
-	router.Group(func(r chi.Router) {
-		//tokenAuth := auth.NewAuth(cfg.SecretKey)
-		//r.Use(jwtauth.Verifier(tokenAuth))
-		//r.Use(jwtauth.Authenticator(tokenAuth))
-
-	})
-
+	// Return *http.Server
 	return &http.Server{
 		Addr:    cfg.RunAddress,
 		Handler: router,
 	}, nil
-}
-
-func methodNotAllowedHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", ContentTypeJSON)
-	w.WriteHeader(405)
-	_ = render.Render(w, r, ErrMethodNotAllowed)
-}
-func notFoundHandler(w http.ResponseWriter, r *http.Request) {
-	w.Header().Set("Content-type", ContentTypeJSON)
-	w.WriteHeader(400)
-	_ = render.Render(w, r, ErrNotFound)
 }
