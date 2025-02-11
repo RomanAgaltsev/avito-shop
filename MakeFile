@@ -14,10 +14,10 @@ ginkgo:	# Execute the ginkgo unit tests
 tidy:	# Cleanup go.mod
 	go mod tidy
 
-
 .PHONY: fmt
 fmt:	# Format *.go and *.proto files using gofmt and clang-format
 	gofmt -w .
+	goimports -w .
 
 .PHONY: cover
 cover:	# Show the cover report
