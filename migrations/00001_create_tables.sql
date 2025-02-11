@@ -3,7 +3,7 @@
 CREATE TABLE merch (
     id    SERIAL PRIMARY KEY,
     type  VARCHAR(20) UNIQUE NOT NULL,
-    price INTEGER            NOT NULL DEFAULT 0,
+    price INTEGER            NOT NULL DEFAULT 0
 );
 
 CREATE TABLE users (
