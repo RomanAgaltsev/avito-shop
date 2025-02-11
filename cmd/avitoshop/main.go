@@ -3,7 +3,7 @@ package main
 import (
 	"log"
 
-	"github.com/RomanAgaltsev/avito-shop/internal/app/avitoshop"
+	app "github.com/RomanAgaltsev/avito-shop/internal/app/avitoshop"
 	"github.com/RomanAgaltsev/avito-shop/internal/config"
 )
 

@@ -4,7 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
-	"github.com/samber/slog-chi"
+	slogchi "github.com/samber/slog-chi"
 	"go.uber.org/zap"
 	"go.uber.org/zap/exp/zapslog"
 	"go.uber.org/zap/zapcore"
@@ -45,7 +45,7 @@ func Initialize() error {
 	return nil
 }
 
-// NewRequestLogger creates new slog request logger for the chi router. 
+// NewRequestLogger creates new slog request logger for the chi router.
 func NewRequestLogger() func(handler http.Handler) http.Handler {
 	return slogchi.NewWithConfig(slog.Default(), slogchi.Config{
 		DefaultLevel:     slog.LevelInfo,

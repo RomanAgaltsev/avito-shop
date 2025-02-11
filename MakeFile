@@ -17,7 +17,7 @@ tidy:	# Cleanup go.mod
 .PHONY: fmt
 fmt:	# Format *.go and *.proto files using gofmt and clang-format
 	gofmt -w .
-	goimports -w .
+	goimports -local "github.com/RomanAgaltsev/avito-shop" -w .
 
 .PHONY: cover
 cover:	# Show the cover report

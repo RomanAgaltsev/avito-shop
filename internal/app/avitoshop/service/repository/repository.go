@@ -2,8 +2,10 @@ package repository
 
 import (
 	"context"
-	"github.com/RomanAgaltsev/avito-shop/internal/model"
+
 	"github.com/jackc/pgx/v5/pgxpool"
+
+	"github.com/RomanAgaltsev/avito-shop/internal/model"
 )
 
 // New creates new repository.
