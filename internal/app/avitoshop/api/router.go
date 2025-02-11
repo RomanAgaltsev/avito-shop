@@ -39,7 +39,7 @@ func NewRouter(cfg *config.Config, handle *Handler) *chi.Mux {
 		r.Use(jwtauth.Verifier(tokenAuth))
 		r.Use(jwtauth.Authenticator(tokenAuth))
 
-		r.Post("/api/sendCoin", handle.SendCoin)
+		r.Post("/api/sendCoin", handle.SendCoins)
 		r.Get("/api/buy/{item}", handle.BuyItem)
 		r.Get("/api/info", handle.Info)
 	})

@@ -12,6 +12,9 @@ type Service interface {
     UserRegister(ctx context.Context, user model.User) error
     UserLogin(ctx context.Context, user model.User) error
     UserBalance(ctx context.Context, user model.User) error
+    SendCoins(ctx context.Context, fromUser model.User, toUser model.User, amount int) error
+    BuyItem(ctx context.Context, user model.User, item model.InventoryItem) error
+    UserInfo(ctx context.Context, user model.User) (model.Info, error)
 }
 
 // Repository is the user service repository interface.
@@ -47,4 +50,19 @@ func (s *service) UserLogin(ctx context.Context, user model.User) error {
 // UserBalance creates new user balance.
 func (s *service) UserBalance(ctx context.Context, user model.User) error {
     return nil
+}
+
+// SendCoins sends given amount of coins from one user to another.
+func (s *service) SendCoins(ctx context.Context, fromUser model.User, toUser model.User, amount int) error {
+    return nil
+}
+
+// BuyItem buys a given inventory item.
+func (s *service) BuyItem(ctx context.Context, user model.User, item model.InventoryItem) error {
+    return nil
+}
+
+// UserInfo returns user info about coins, inventory and transaction history.
+func (s *service) UserInfo(ctx context.Context, user model.User) (model.Info, error) {
+    return model.Info{}, nil
 }

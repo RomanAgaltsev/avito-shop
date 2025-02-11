@@ -40,10 +40,15 @@ type Info struct {
 	CoinsHistory CoinsHistory    `json:"coinHistory"`
 }
 
+// Render tunes rendering of AuthResponse structure.
+func (i *Info) Render(w http.ResponseWriter, r *http.Request) error {
+	return nil
+}
+
 // InventoryItem is an inventory item structure.
 type InventoryItem struct {
 	Type     string `json:"type"`
-	Quantity string `json:"quantity"`
+	Quantity int    `json:"quantity"`
 }
 
 // CoinsHistory contains users coin transaction history.
@@ -62,4 +67,15 @@ type CoinsReceiving struct {
 type CoinsSending struct {
 	ToUser string `json:"toUser"`
 	Amount int    `json:"amount"`
+}
+
+// Bind validates user structure.
+func (cs *CoinsSending) Bind(r *http.Request) error {
+	if cs.ToUser == "" {
+		return fmt.Errorf("toUser is a required field")
+	}
+	if cs.Amount == 0 {
+		return fmt.Errorf("amount is a required field")
+	}
+	return nil
 }

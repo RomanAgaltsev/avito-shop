@@ -4,6 +4,7 @@ import (
 	"log/slog"
 	"net/http"
 
+	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 
 	"github.com/RomanAgaltsev/avito-shop/internal/app/avitoshop/service/shop"
@@ -20,6 +21,9 @@ const (
 	msgNewJWTToken    = "new JWT token"
 	msgUserLogin      = "user login"
 	msgNewUserBalance = "new user balance"
+	msgSendCoins      = "send coins"
+	msgBuyItem        = "buy item"
+	msgUserInfo       = "user info"
 )
 
 // Handler handles all HTTP requests.
@@ -39,8 +43,8 @@ func NewHandler(cfg *config.Config, service shop.Service) *Handler {
 // Auth handles user registration and authentication.
 func (h *Handler) Auth(w http.ResponseWriter, r *http.Request) {
 	// Get user from request
-	var usr model.User
-	if err := render.Bind(r, &usr); err != nil {
+	var user model.User
+	if err := render.Bind(r, &user); err != nil {
 		_ = render.Render(w, r, ErrorRenderer(err))
 		return
 	}
@@ -49,7 +53,7 @@ func (h *Handler) Auth(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 
 	// Login user
-	err := h.service.UserLogin(ctx, usr)
+	err := h.service.UserLogin(ctx, user)
 	if err != nil {
 		// Something has gone wrong
 		slog.Info(msgUserLogin, argError, err.Error())
@@ -58,7 +62,7 @@ func (h *Handler) Auth(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Create a balance for the user
-	err = h.service.UserBalance(ctx, usr)
+	err = h.service.UserBalance(ctx, user)
 	if err != nil {
 		slog.Info(msgNewUserBalance, argError, err.Error())
 		_ = render.Render(w, r, ServerErrorRenderer(err))
@@ -67,7 +71,7 @@ func (h *Handler) Auth(w http.ResponseWriter, r *http.Request) {
 
 	// Generate JWT token
 	ja := auth.NewAuth(h.cfg.SecretKey)
-	_, tokenString, err := auth.NewJWTToken(ja, usr.UserName)
+	_, tokenString, err := auth.NewJWTToken(ja, user.UserName)
 	if err != nil {
 		// Something has gone wrong
 		slog.Info(msgNewJWTToken, argError, err.Error())
@@ -88,17 +92,96 @@ func (h *Handler) Auth(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-// SendCoin handles send coins request.
-func (h *Handler) SendCoin(w http.ResponseWriter, r *http.Request) {
+// SendCoins handles send coins request.
+func (h *Handler) SendCoins(w http.ResponseWriter, r *http.Request) {
+	// Get context from request
+	ctx := r.Context()
 
+	// Get user from request
+	fromUser, err := auth.UserFromRequest(r, h.cfg.SecretKey)
+	if err != nil {
+		_ = render.Render(w, r, ErrorRenderer(err))
+		return
+	}
+
+	var coinsSending model.CoinsSending
+	if err = render.Bind(r, &coinsSending); err != nil {
+		_ = render.Render(w, r, ErrorRenderer(err))
+		return
+	}
+
+	toUser := model.User{
+		UserName: coinsSending.ToUser,
+	}
+	amount := coinsSending.Amount
+
+	// Send coins
+	err = h.service.SendCoins(ctx, fromUser, toUser, amount)
+	if err != nil {
+		// Something has gone wrong
+		slog.Info(msgSendCoins, argError, err.Error())
+		_ = render.Render(w, r, ServerErrorRenderer(err))
+		return
+	}
+
+	render.Status(r, http.StatusOK)
 }
 
 // BuyItem handles buy item request.
 func (h *Handler) BuyItem(w http.ResponseWriter, r *http.Request) {
+	// Get context from request
+	ctx := r.Context()
 
+	// Get user from request
+	user, err := auth.UserFromRequest(r, h.cfg.SecretKey)
+	if err != nil {
+		_ = render.Render(w, r, ErrorRenderer(err))
+		return
+	}
+
+	item := model.InventoryItem{
+		Type:     chi.URLParam(r, "item"),
+		Quantity: 1,
+	}
+
+	err = h.service.BuyItem(ctx, user, item)
+	if err != nil {
+		// Something has gone wrong
+		slog.Info(msgBuyItem, argError, err.Error())
+		_ = render.Render(w, r, ServerErrorRenderer(err))
+		return
+	}
+
+	render.Status(r, http.StatusOK)
 }
 
 // Info handles info request.
 func (h *Handler) Info(w http.ResponseWriter, r *http.Request) {
+	// Get context from request
+	ctx := r.Context()
 
+	// Get user from request
+	user, err := auth.UserFromRequest(r, h.cfg.SecretKey)
+	if err != nil {
+		_ = render.Render(w, r, ErrorRenderer(err))
+		return
+	}
+
+	info, err := h.service.UserInfo(ctx, user)
+	if err != nil {
+		// Something has gone wrong
+		slog.Info(msgUserInfo, argError, err.Error())
+		_ = render.Render(w, r, ServerErrorRenderer(err))
+		return
+	}
+
+	// Set header
+	w.Header().Set("Content-type", contentTypeJSON)
+	render.Status(r, http.StatusOK)
+
+	// Render the list of orders to response
+	if err = render.Render(w, r, &info); err != nil {
+		_ = render.Render(w, r, ErrorRenderer(err))
+		return
+	}
 }
