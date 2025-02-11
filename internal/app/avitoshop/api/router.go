@@ -1,14 +1,16 @@
 package api
 
 import (
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
-	//"github.com/go-chi/jwtauth/v5"
+	"github.com/go-chi/jwtauth/v5"
 	"github.com/go-chi/render"
-	"net/http"
 
 	"github.com/RomanAgaltsev/avito-shop/internal/config"
 	"github.com/RomanAgaltsev/avito-shop/internal/logger"
+	"github.com/RomanAgaltsev/avito-shop/internal/pkg/auth"
 )
 
 const ContentTypeJSON = "application/json"
@@ -27,17 +29,15 @@ func NewRouter(cfg *config.Config, handle *Handler) *chi.Mux {
 	router.MethodNotAllowed(methodNotAllowedHandler)
 	router.NotFound(notFoundHandler)
 
-	//	Set routes
-
 	// Public routes
 	router.Group(func(r chi.Router) {
 		r.Post("/api/auth", handle.Auth)
 	})
 	// Protected routes
 	router.Group(func(r chi.Router) {
-		//		tokenAuth := auth.NewAuth(cfg.SecretKey)
-		//		r.Use(jwtauth.Verifier(tokenAuth))
-		//		r.Use(jwtauth.Authenticator(tokenAuth))
+		tokenAuth := auth.NewAuth(cfg.SecretKey)
+		r.Use(jwtauth.Verifier(tokenAuth))
+		r.Use(jwtauth.Authenticator(tokenAuth))
 
 		r.Post("/api/sendCoin", handle.SendCoin)
 		r.Get("/api/buy/{item}", handle.BuyItem)
