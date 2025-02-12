@@ -4,6 +4,7 @@ import (
     "context"
     "errors"
     "fmt"
+    
     "github.com/cenkalti/backoff/v4"
 
     "github.com/RomanAgaltsev/avito-shop/internal/app/avitoshop/service/repository"
@@ -33,7 +34,7 @@ type Service interface {
 // Repository is the user service repository interface.
 type Repository interface {
     CreateUser(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) (model.User, error)
-    CreateBalance(ctx context.Context, user model.User) error
+    CreateBalance(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) error
     SendCoins(ctx context.Context, fromUser model.User, toUser model.User, amount int) error
     BuyItem(ctx context.Context, user model.User, item model.InventoryItem) error
     GetBalance(ctx context.Context, user model.User) (int, error)
@@ -82,7 +83,7 @@ func (s *service) UserAuth(ctx context.Context, user model.User) error {
 
 // UserBalance creates new user balance.
 func (s *service) UserBalance(ctx context.Context, user model.User) error {
-    return s.repository.CreateBalance(ctx, user)
+    return s.repository.CreateBalance(ctx, repository.DefaultBackOff, user)
 }
 
 // SendCoins sends given amount of coins from one user to another.

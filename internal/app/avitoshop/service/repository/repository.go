@@ -95,7 +95,16 @@ func (r *Repository) CreateUser(ctx context.Context, bo *backoff.ExponentialBack
 }
 
 // CreateBalance creates new user balance in the repository.
-func (r *Repository) CreateBalance(ctx context.Context, user model.User) error {
+func (r *Repository) CreateBalance(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) error {
+	// Create new user balance in DB
+	_, err := backoff.RetryWithData(func() (int32, error) {
+		return r.q.CreateBalance(ctx, user.UserName)
+	}, bo)
+
+	if err != nil {
+		return err
+	}
+
 	return nil
 }
 
