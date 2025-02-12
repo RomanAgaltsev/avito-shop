@@ -35,3 +35,9 @@ VALUES ($1, $2, $3, $4) RETURNING id;
 -- name: CreateInventory :one
 INSERT INTO inventory (username, type, quantity)
 VALUES ($1, $2, quantity+1) RETURNING id;
+
+-- name: GetInventory :many
+SELECT id, username, type, quantity, bought_at
+FROM inventory
+WHERE username = $1
+ORDER BY bought_at;

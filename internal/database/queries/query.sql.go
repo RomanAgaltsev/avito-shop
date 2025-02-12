@@ -92,6 +92,39 @@ func (q *Queries) GetBalance(ctx context.Context, username string) (Balance, err
 	return i, err
 }
 
+const getInventory = `-- name: GetInventory :many
+SELECT id, username, type, quantity, bought_at
+FROM inventory
+WHERE username = $1
+ORDER BY bought_at
+`
+
+func (q *Queries) GetInventory(ctx context.Context, username string) ([]Inventory, error) {
+	rows, err := q.db.Query(ctx, getInventory, username)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Inventory
+	for rows.Next() {
+		var i Inventory
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.Type,
+			&i.Quantity,
+			&i.BoughtAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getUser = `-- name: GetUser :one
 SELECT id, username, password, created_at
 FROM users

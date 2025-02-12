@@ -241,8 +241,26 @@ func (r *Repository) GetBalance(ctx context.Context, bo *backoff.ExponentialBack
 	return int(userBalance.Coins), nil
 }
 
-func (r *Repository) GetInventory(ctx context.Context, user model.User) ([]model.InventoryItem, error) {
-	return nil, nil
+func (r *Repository) GetInventory(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) ([]model.InventoryItem, error) {
+	// Get user inventory from DB
+	inventoryQuery, err := backoff.RetryWithData(func() ([]queries.Inventory, error) {
+		return r.q.GetInventory(ctx, user.UserName)
+	}, bo)
+
+	if err != nil {
+		return nil, err
+	}
+
+	// Fill the slice of inventory to return
+	inventory := make([]model.InventoryItem, 0, len(inventoryQuery))
+	for _, item := range inventoryQuery {
+		inventory = append(inventory, model.InventoryItem{
+			Type:     item.Type,
+			Quantity: int(item.Quantity),
+		})
+	}
+
+	return inventory, nil
 }
 
 func (r *Repository) GetHistory(ctx context.Context, user model.User) (model.CoinsHistory, error) {
