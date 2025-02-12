@@ -2,10 +2,15 @@ package repository
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/RomanAgaltsev/avito-shop/internal/model"
+)
+
+var (
+	ErrConflict = fmt.Errorf("data conflict")
 )
 
 // New creates new repository.
@@ -22,11 +27,6 @@ type Repository struct {
 }
 
 // CreateUser creates new user in the repository.
-func (r *Repository) CreateUser(ctx context.Context, user model.User) error {
-	return nil
-}
-
-// GetUser returns a user from repository.
-func (r *Repository) GetUser(ctx context.Context, login string) (model.User, error) {
+func (r *Repository) CreateUser(ctx context.Context, user model.User) (model.User, error) {
 	return model.User{}, nil
 }

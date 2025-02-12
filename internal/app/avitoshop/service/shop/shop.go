@@ -2,25 +2,35 @@ package shop
 
 import (
     "context"
+    "errors"
+    "fmt"
 
+    "github.com/RomanAgaltsev/avito-shop/internal/app/avitoshop/service/repository"
     "github.com/RomanAgaltsev/avito-shop/internal/config"
     "github.com/RomanAgaltsev/avito-shop/internal/model"
+    "github.com/RomanAgaltsev/avito-shop/internal/pkg/auth"
+)
+
+var (
+    _ Service    = (*service)(nil)
+    _ Repository = (*repository.Repository)(nil)
+
+    ErrUserNameIsAlreadyTaken = fmt.Errorf("user name has already been taken")
+    ErrWrongUserNamePassword  = fmt.Errorf("wrong username/password")
 )
 
 // Service is the user service interface.
 type Service interface {
-    UserRegister(ctx context.Context, user model.User) error
-    UserLogin(ctx context.Context, user model.User) error
+    UserAuth(ctx context.Context, user model.User) error
     UserBalance(ctx context.Context, user model.User) error
+    UserInfo(ctx context.Context, user model.User) (model.Info, error)
     SendCoins(ctx context.Context, fromUser model.User, toUser model.User, amount int) error
     BuyItem(ctx context.Context, user model.User, item model.InventoryItem) error
-    UserInfo(ctx context.Context, user model.User) (model.Info, error)
 }
 
 // Repository is the user service repository interface.
 type Repository interface {
-    CreateUser(ctx context.Context, user model.User) error
-    GetUser(ctx context.Context, login string) (model.User, error)
+    CreateUser(ctx context.Context, user model.User) (model.User, error)
 }
 
 // NewService creates new user service.
@@ -37,13 +47,28 @@ type service struct {
     cfg        *config.Config
 }
 
-// UserRegister creates new user.
-func (s *service) UserRegister(ctx context.Context, user model.User) error {
-    return nil
-}
+// UserAuth creates new user.
+func (s *service) UserAuth(ctx context.Context, user model.User) error {
+    // Replace password with hash
+    hash, err := auth.HashPassword(user.Password)
+    if err != nil {
+        return err
+    }
+    user.Password = hash
 
-// UserLogin logins existed user.
-func (s *service) UserLogin(ctx context.Context, user model.User) error {
+    // Create user in the repository
+    userInRepo, err := s.repository.CreateUser(ctx, user)
+
+    // There is a conflict - user name is already exists in the database
+    if errors.Is(err, repository.ErrConflict) {
+        return ErrUserNameIsAlreadyTaken
+    }
+
+    // If user doesn`t exist or password is wrong
+    if !auth.CheckPasswordHash(user.Password, userInRepo.Password) {
+        return ErrWrongUserNamePassword
+    }
+
     return nil
 }
 
