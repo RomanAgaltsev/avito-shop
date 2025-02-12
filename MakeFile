@@ -42,3 +42,15 @@ build:	# Build application binary
 .PHONY: run
 run:	# Run the application
 	./cmd/avitoshop/avitoshop -d="postgres://$(pguser):$(pguserpass)@$(pguri)/$(dbname)" -k=$(secretkey)
+
+# ==============================================================================
+
+#  Docker commands
+
+.PHONY: dc-build
+dc-build:	# Build docker compose
+	docker-compose -f deployments/compose.yaml -f deployments/avitoshop/compose.yaml -f deployments/postgres/compose.yaml --env-file .env build
+
+.PHONY: dc-run
+dc-run:	# Build docker compose
+	docker-compose -f deployments/compose.yaml -f deployments/avitoshop/compose.yaml -f deployments/postgres/compose.yaml --env-file .env run
