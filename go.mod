@@ -3,9 +3,11 @@ module github.com/RomanAgaltsev/avito-shop
 go 1.23.6
 
 require (
+	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/go-chi/chi/v5 v5.2.1
 	github.com/go-chi/jwtauth/v5 v5.3.2
 	github.com/go-chi/render v1.0.3
+	github.com/jackc/pgerrcode v0.0.0-20240316143900-6e2875d9b438
 	github.com/jackc/pgx/v5 v5.7.2
 	github.com/lestrrat-go/jwx/v2 v2.1.3
 	github.com/onsi/ginkgo/v2 v2.22.2

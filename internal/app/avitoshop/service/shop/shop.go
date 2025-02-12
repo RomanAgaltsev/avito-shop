@@ -4,6 +4,7 @@ import (
     "context"
     "errors"
     "fmt"
+    "github.com/cenkalti/backoff/v4"
 
     "github.com/RomanAgaltsev/avito-shop/internal/app/avitoshop/service/repository"
     "github.com/RomanAgaltsev/avito-shop/internal/config"
@@ -31,7 +32,7 @@ type Service interface {
 
 // Repository is the user service repository interface.
 type Repository interface {
-    CreateUser(ctx context.Context, user model.User) (model.User, error)
+    CreateUser(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) (model.User, error)
     CreateBalance(ctx context.Context, user model.User) error
     SendCoins(ctx context.Context, fromUser model.User, toUser model.User, amount int) error
     BuyItem(ctx context.Context, user model.User, item model.InventoryItem) error
@@ -64,7 +65,7 @@ func (s *service) UserAuth(ctx context.Context, user model.User) error {
     user.Password = hash
 
     // Create user in the repository
-    userInRepo, err := s.repository.CreateUser(ctx, user)
+    userInRepo, err := s.repository.CreateUser(ctx, repository.DefaultBackOff, user)
 
     // There is a conflict - user name is already exists in the database
     if errors.Is(err, repository.ErrConflict) {
