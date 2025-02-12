@@ -41,3 +41,8 @@ func (r *Repository) CreateBalance(ctx context.Context, user model.User) error {
 func (r *Repository) SendCoins(ctx context.Context, fromUser model.User, toUser model.User, amount int) error {
 	return nil
 }
+
+// BuyItem register purhcase of inventory item (merch) for a given user.
+func (r *Repository) BuyItem(ctx context.Context, user model.User, item model.InventoryItem) error {
+	return nil
+}

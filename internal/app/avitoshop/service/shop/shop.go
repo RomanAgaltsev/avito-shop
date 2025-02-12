@@ -34,6 +34,7 @@ type Repository interface {
     CreateUser(ctx context.Context, user model.User) (model.User, error)
     CreateBalance(ctx context.Context, user model.User) error
     SendCoins(ctx context.Context, fromUser model.User, toUser model.User, amount int) error
+    BuyItem(ctx context.Context, user model.User, item model.InventoryItem) error
 }
 
 // NewService creates new user service.
@@ -96,6 +97,15 @@ func (s *service) SendCoins(ctx context.Context, fromUser model.User, toUser mod
 
 // BuyItem buys a given inventory item.
 func (s *service) BuyItem(ctx context.Context, user model.User, item model.InventoryItem) error {
+    err := s.repository.BuyItem(ctx, user, item)
+    if errors.Is(err, repository.ErrNegativeBalance) {
+        return ErrNotEnoughBalance
+    }
+
+    if err != nil {
+        return err
+    }
+
     return nil
 }
 
