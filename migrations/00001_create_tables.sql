@@ -48,7 +48,7 @@ VALUES
     ('umbrella', 200),
     ('socks', 10),
     ('wallet', 50),
-    ('wallet', 500);
+    ('pink-hoody', 500);
 -- +goose StatementEnd
 
 -- +goose Down
