@@ -40,5 +40,5 @@ build:	# Build application binary
 	go build -o cmd/avitoshop/avitoshop cmd/avitoshop/main.go
 
 .PHONY: run
-build:	# Run the application
+run:	# Run the application
 	./cmd/avitoshop/avitoshop -d="postgres://$(pguser):$(pguserpass)@$(pguri)/$(dbname)" -k=$(secretkey)
