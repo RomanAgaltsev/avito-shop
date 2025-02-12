@@ -1,0 +1,52 @@
+services:
+    postgres:
+        image: postgres:17
+        container_name: postgres
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "pg_isready", "--quiet", "--dbname", "${POSTGRES_DB}", "--username", "${POSTGRES_USER}"]
+            start_period: 10s
+            interval: 10s
+            timeout: 30s
+            retries: 10
+        logging:
+            driver: "gelf"
+            options:
+                gelf-address: "udp://localhost:12201"
+                tag: postgres
+        environment:
+            POSTGRES_USER: ${POSTGRES_USER:?Please specify the POSTGRES_USER variable in the .env file}
+            POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Please specify the POSTGRES_PASSWORD variable in the .env file}
+            POSTGRES_DB: ${POSTGRES_DB:?Please specify the POSTGRES_DB variable in the .env file}
+            POSTGRES_APP_USER: ${POSTGRES_APP_USER:?Please specify the POSTGRES_APP_USER variable in the .env file}
+            POSTGRES_APP_PASS: ${POSTGRES_APP_PASS:?Please specify the POSTGRES_APP_PASS variable in the .env file}
+            POSTGRES_APP_DB: ${POSTGRES_APP_DB:?Please specify the POSTGRES_APP_DB variable in the .env file}
+        volumes:
+            - ./postgres/init-database.sh:/docker-entrypoint-initdb.d/init-database.sh
+            - ./volume/postgresql:/var/lib/postgresql/data
+        ports:
+            - "5432:5432"
+        networks:
+            - avitoshop-network
+
+    pgadmin:
+        image: dpage/pgadmin4
+        container_name: pgadmin4
+        restart: unless-stopped
+        healthcheck:
+            test: ["CMD", "wget", "-O", "-", "http://localhost:80/misc/ping"]
+            start_period: 10s
+            interval: 10s
+            timeout: 30s
+            retries: 10
+        environment:
+            PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:?Please specify the PGADMIN_DEFAULT_EMAIL variable in the .env file}
+            PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:?Please specify the PGADMIN_DEFAULT_PASSWORD variable in the .env file}
+            PGADMIN_CONFIG_SERVER_MODE: "False"
+        user: "$UID:$GID"
+        volumes:
+            - ./volume/pgadmin:/var/lib/pgadmin
+        ports:
+            - ${PGADMIN_PORT:-7080}:80
+        networks:
+            - avitoshop-network
