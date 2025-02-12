@@ -10,7 +10,8 @@ import (
 )
 
 var (
-	ErrConflict = fmt.Errorf("data conflict")
+	ErrConflict        = fmt.Errorf("data conflict")
+	ErrNegativeBalance = fmt.Errorf("negative balance")
 )
 
 // New creates new repository.
@@ -33,5 +34,10 @@ func (r *Repository) CreateUser(ctx context.Context, user model.User) (model.Use
 
 // CreateBalance creates new user balance in the repository.
 func (r *Repository) CreateBalance(ctx context.Context, user model.User) error {
+	return nil
+}
+
+// SendCoins transfer given amount of coins from one user to another.
+func (r *Repository) SendCoins(ctx context.Context, fromUser model.User, toUser model.User, amount int) error {
 	return nil
 }

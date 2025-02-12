@@ -17,6 +17,7 @@ var (
 
     ErrUserNameIsAlreadyTaken = fmt.Errorf("user name has already been taken")
     ErrWrongUserNamePassword  = fmt.Errorf("wrong username/password")
+    ErrNotEnoughBalance       = fmt.Errorf("not enough coins to send")
 )
 
 // Service is the user service interface.
@@ -32,6 +33,7 @@ type Service interface {
 type Repository interface {
     CreateUser(ctx context.Context, user model.User) (model.User, error)
     CreateBalance(ctx context.Context, user model.User) error
+    SendCoins(ctx context.Context, fromUser model.User, toUser model.User, amount int) error
 }
 
 // NewService creates new user service.
@@ -80,6 +82,15 @@ func (s *service) UserBalance(ctx context.Context, user model.User) error {
 
 // SendCoins sends given amount of coins from one user to another.
 func (s *service) SendCoins(ctx context.Context, fromUser model.User, toUser model.User, amount int) error {
+    err := s.repository.SendCoins(ctx, fromUser, toUser, amount)
+    if errors.Is(err, repository.ErrNegativeBalance) {
+        return ErrNotEnoughBalance
+    }
+
+    if err != nil {
+        return err
+    }
+
     return nil
 }
 
