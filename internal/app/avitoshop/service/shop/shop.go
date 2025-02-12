@@ -31,6 +31,7 @@ type Service interface {
 // Repository is the user service repository interface.
 type Repository interface {
     CreateUser(ctx context.Context, user model.User) (model.User, error)
+    CreateBalance(ctx context.Context, user model.User) error
 }
 
 // NewService creates new user service.
@@ -74,7 +75,7 @@ func (s *service) UserAuth(ctx context.Context, user model.User) error {
 
 // UserBalance creates new user balance.
 func (s *service) UserBalance(ctx context.Context, user model.User) error {
-    return nil
+    return s.repository.CreateBalance(ctx, user)
 }
 
 // SendCoins sends given amount of coins from one user to another.

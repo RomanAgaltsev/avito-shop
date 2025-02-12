@@ -30,3 +30,8 @@ type Repository struct {
 func (r *Repository) CreateUser(ctx context.Context, user model.User) (model.User, error) {
 	return model.User{}, nil
 }
+
+// CreateBalance creates new user balance in the repository.
+func (r *Repository) CreateBalance(ctx context.Context, user model.User) error {
+	return nil
+}
