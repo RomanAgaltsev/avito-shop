@@ -12,7 +12,7 @@
 *.out
 
 # Binaries
-cmd/avito-shop/avito-shop
+cmd/avitoshop/avitoshop
 
 # Dependency directories (remove the comment below to include it)
 vendor/

@@ -1,3 +1,9 @@
+pguser = postgres
+pguserpass = postgres
+pguri = localhost:5432
+dbname = avitoshop
+secretkey = secret
+
 # ==============================================================================
 
 #  Local commands
@@ -28,3 +34,11 @@ update:	# Update dependencies as recorded in the go.mod and go.sum files
 	go list -m -u all
 	go get -u ./...
 	go mod tidy
+
+.PHONY: build
+build:	# Build application binary
+	go build -o cmd/avitoshop/avitoshop cmd/avitoshop/main.go
+
+.PHONY: run
+build:	# Run the application
+	./cmd/avitoshop/avitoshop -d="postgres://$(pguser):$(pguserpass)@$(pguri)/$(dbname)" -k=$(secretkey)
