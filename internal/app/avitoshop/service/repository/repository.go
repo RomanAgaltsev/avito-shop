@@ -263,6 +263,40 @@ func (r *Repository) GetInventory(ctx context.Context, bo *backoff.ExponentialBa
 	return inventory, nil
 }
 
-func (r *Repository) GetHistory(ctx context.Context, user model.User) (model.CoinsHistory, error) {
-	return model.CoinsHistory{}, nil
+func (r *Repository) GetHistory(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) (model.CoinsHistory, error) {
+	// Get history of user transactions from DB
+	historyQuery, err := backoff.RetryWithData(func() ([]queries.History, error) {
+		return r.q.GetHistory(ctx, user.UserName)
+	}, bo)
+
+	if err != nil {
+		return model.CoinsHistory{}, err
+	}
+
+	// There is a compromise between the number of database accesses and the memory allocations for slices capacity.
+	received := make([]model.CoinsReceiving, 0, len(historyQuery))
+	sent := make([]model.CoinsSending, 0, len(historyQuery))
+
+	for _, rec := range historyQuery {
+		if rec.FromUser != "" {
+			received = append(received, model.CoinsReceiving{
+				FromUser: rec.FromUser,
+				Amount:   int(rec.Amount),
+			})
+			continue
+		}
+		if rec.ToUser != "" {
+			sent = append(sent, model.CoinsSending{
+				ToUser: rec.ToUser,
+				Amount: int(rec.Amount),
+			})
+		}
+	}
+
+	coinHistory := model.CoinsHistory{
+		Received: received,
+		Sent:     sent,
+	}
+
+	return coinHistory, nil
 }

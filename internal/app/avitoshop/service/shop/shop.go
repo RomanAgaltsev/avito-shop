@@ -39,7 +39,7 @@ type Repository interface {
     BuyItem(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User, item model.InventoryItem) error
     GetBalance(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) (int, error)
     GetInventory(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) ([]model.InventoryItem, error)
-    GetHistory(ctx context.Context, user model.User) (model.CoinsHistory, error)
+    GetHistory(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) (model.CoinsHistory, error)
 }
 
 // NewService creates new user service.
@@ -126,39 +126,14 @@ func (s *service) UserInfo(ctx context.Context, user model.User) (model.Info, er
         return model.Info{}, err
     }
 
-    history, err := s.repository.GetHistory(ctx, user)
+    history, err := s.repository.GetHistory(ctx, repository.DefaultBackOff, user)
     if err != nil {
         return model.Info{}, err
-    }
-
-    // There is a compromise between the number of database accesses and the memory allocations for slices capacity.
-    received := make([]model.CoinsReceiving, 0, len(history))
-    sent := make([]model.CoinsSending, 0, len(history))
-
-    for _, rec := range history {
-        if rec.FromUser != "" {
-            received = append(received, model.CoinsReceiving{
-                FromUser: rec.FromUser,
-                Amount:   int(rec.Amount),
-            })
-            continue
-        }
-        if rec.ToUser != "" {
-            sent = append(sent, model.CoinsSending{
-                ToUser: rec.ToUser,
-                Amount: int(rec.Amount),
-            })
-        }
-    }
-
-    coinHistory := model.CoinsHistory{
-        Received: received,
-        Sent:     sent,
     }
 
     return model.Info{
         Coins:        coins,
         Inventory:    inventory,
-        CoinsHistory: coinHistory,
+        CoinsHistory: history,
     }, nil
 }

@@ -41,3 +41,9 @@ SELECT id, username, type, quantity, bought_at
 FROM inventory
 WHERE username = $1
 ORDER BY bought_at;
+
+-- name: GetHistory :many
+SELECT id, username, from_user, to_user, amount, sent_at
+FROM history
+WHERE username = $1
+ORDER BY sent_at;

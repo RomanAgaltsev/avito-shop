@@ -92,6 +92,40 @@ func (q *Queries) GetBalance(ctx context.Context, username string) (Balance, err
 	return i, err
 }
 
+const getHistory = `-- name: GetHistory :many
+SELECT id, username, from_user, to_user, amount, sent_at
+FROM history
+WHERE username = $1
+ORDER BY sent_at
+`
+
+func (q *Queries) GetHistory(ctx context.Context, username string) ([]History, error) {
+	rows, err := q.db.Query(ctx, getHistory, username)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []History
+	for rows.Next() {
+		var i History
+		if err := rows.Scan(
+			&i.ID,
+			&i.Username,
+			&i.FromUser,
+			&i.ToUser,
+			&i.Amount,
+			&i.SentAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getInventory = `-- name: GetInventory :many
 SELECT id, username, type, quantity, bought_at
 FROM inventory
