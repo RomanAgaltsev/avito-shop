@@ -182,8 +182,50 @@ func (r *Repository) SendCoins(ctx context.Context, bo *backoff.ExponentialBackO
 }
 
 // BuyItem register purhcase of inventory item (merch) for a given user.
-func (r *Repository) BuyItem(ctx context.Context, user model.User, item model.InventoryItem) error {
-	return nil
+func (r *Repository) BuyItem(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User, item model.InventoryItem) error {
+	// Begin transaction
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	// Defer transaction rollback
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	// Create query with transaction
+	qtx := r.q.WithTx(tx)
+
+	// Withdraw merch price from the balance of the user
+	userBalance, err := backoff.RetryWithData(func() (int32, error) {
+		return qtx.WithdrawMerchFromBalance(ctx, queries.WithdrawMerchFromBalanceParams{
+			Username: user.UserName,
+			Type:     item.Type,
+		})
+	}, bo)
+	if err != nil {
+		_ = tx.Rollback(ctx)
+		return err
+	}
+
+	// If the balance has become negative after withdrawal,
+	// rollback the transaction and return the negative balance error
+	if userBalance < 0 {
+		_ = tx.Rollback(ctx)
+		return ErrNegativeBalance
+	}
+
+	// Balance enough to withdraw - add item to the user inventory
+	_, err = backoff.RetryWithData(func() (int32, error) {
+		return qtx.CreateInventory(ctx, queries.CreateInventoryParams{
+			Username: user.UserName,
+			Type:     item.Type,
+		})
+	}, bo)
+	if err != nil {
+		_ = tx.Rollback(ctx)
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (r *Repository) GetBalance(ctx context.Context, user model.User) (int, error) {

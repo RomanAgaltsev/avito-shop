@@ -45,6 +45,23 @@ func (q *Queries) CreateHistoryRecord(ctx context.Context, arg CreateHistoryReco
 	return id, err
 }
 
+const createInventory = `-- name: CreateInventory :one
+INSERT INTO inventory (username, type, quantity)
+VALUES ($1, $2, quantity+1) RETURNING id
+`
+
+type CreateInventoryParams struct {
+	Username string
+	Type     string
+}
+
+func (q *Queries) CreateInventory(ctx context.Context, arg CreateInventoryParams) (int32, error) {
+	row := q.db.QueryRow(ctx, createInventory, arg.Username, arg.Type)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (username, password)
 VALUES ($1, $2) RETURNING id
@@ -106,6 +123,26 @@ type UpdateBalanceParams struct {
 
 func (q *Queries) UpdateBalance(ctx context.Context, arg UpdateBalanceParams) (int32, error) {
 	row := q.db.QueryRow(ctx, updateBalance, arg.Username, arg.Coins)
+	var coins int32
+	err := row.Scan(&coins)
+	return coins, err
+}
+
+const withdrawMerchFromBalance = `-- name: WithdrawMerchFromBalance :one
+UPDATE balance
+SET coins = coins - m.price
+FROM merch AS m
+LEFT JOIN balance AS b ON m.type = $2
+WHERE b.username = $1 RETURNING b.coins
+`
+
+type WithdrawMerchFromBalanceParams struct {
+	Username string
+	Type     string
+}
+
+func (q *Queries) WithdrawMerchFromBalance(ctx context.Context, arg WithdrawMerchFromBalanceParams) (int32, error) {
+	row := q.db.QueryRow(ctx, withdrawMerchFromBalance, arg.Username, arg.Type)
 	var coins int32
 	err := row.Scan(&coins)
 	return coins, err

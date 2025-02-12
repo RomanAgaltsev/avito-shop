@@ -25,7 +25,7 @@ CREATE TABLE inventory (
     username  VARCHAR(20) NOT NULL,
     type      VARCHAR(20) NOT NULL,
     quantity  INTEGER     NOT NULL DEFAULT 0,
-    bought_at TIMESTAMP  NOT NULL DEFAULT NOW()
+    bought_at TIMESTAMP   NOT NULL DEFAULT NOW()
 );
 
 CREATE TABLE history (

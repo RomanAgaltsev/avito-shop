@@ -36,7 +36,7 @@ type Repository interface {
     CreateUser(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) (model.User, error)
     CreateBalance(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) error
     SendCoins(ctx context.Context, bo *backoff.ExponentialBackOff, fromUser model.User, toUser model.User, amount int) error
-    BuyItem(ctx context.Context, user model.User, item model.InventoryItem) error
+    BuyItem(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User, item model.InventoryItem) error
     GetBalance(ctx context.Context, user model.User) (int, error)
     GetInventory(ctx context.Context, user model.User) ([]model.InventoryItem, error)
     GetHistory(ctx context.Context, user model.User) (model.CoinsHistory, error)
@@ -102,7 +102,7 @@ func (s *service) SendCoins(ctx context.Context, fromUser model.User, toUser mod
 
 // BuyItem buys a given inventory item.
 func (s *service) BuyItem(ctx context.Context, user model.User, item model.InventoryItem) error {
-    err := s.repository.BuyItem(ctx, user, item)
+    err := s.repository.BuyItem(ctx, repository.DefaultBackOff, user, item)
     if errors.Is(err, repository.ErrNegativeBalance) {
         return ErrNotEnoughBalance
     }

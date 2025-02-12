@@ -21,6 +21,17 @@ UPDATE balance
 SET coins = coins + $2
 WHERE username = $1 RETURNING coins;
 
+-- name: WithdrawMerchFromBalance :one
+UPDATE balance
+SET coins = coins - m.price
+FROM merch AS m
+LEFT JOIN balance AS b ON m.type = $2
+WHERE b.username = $1 RETURNING b.coins;
+
 -- name: CreateHistoryRecord :one
 INSERT INTO history (username, from_user, to_user, amount)
 VALUES ($1, $2, $3, $4) RETURNING id;
+
+-- name: CreateInventory :one
+INSERT INTO inventory (username, type, quantity)
+VALUES ($1, $2, quantity+1) RETURNING id;
