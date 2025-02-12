@@ -18,12 +18,11 @@ const (
 
 	argError = "error"
 
-	msgNewJWTToken    = "new JWT token"
-	msgUserLogin      = "user login"
-	msgNewUserBalance = "new user balance"
-	msgSendCoins      = "send coins"
-	msgBuyItem        = "buy item"
-	msgUserInfo       = "user info"
+	msgNewJWTToken = "new JWT token"
+	msgUserAuth    = "user auth"
+	msgSendCoins   = "send coins"
+	msgBuyItem     = "buy item"
+	msgUserInfo    = "user info"
 )
 
 // Handler handles all HTTP requests.
@@ -52,19 +51,11 @@ func (h *Handler) Auth(w http.ResponseWriter, r *http.Request) {
 	// Get context from request
 	ctx := r.Context()
 
-	// Login user
-	err := h.service.UserLogin(ctx, user)
+	// Auth user
+	err := h.service.UserAuth(ctx, user)
 	if err != nil {
 		// Something has gone wrong
-		slog.Info(msgUserLogin, argError, err.Error())
-		_ = render.Render(w, r, ServerErrorRenderer(err))
-		return
-	}
-
-	// Create a balance for the user
-	err = h.service.UserBalance(ctx, user)
-	if err != nil {
-		slog.Info(msgNewUserBalance, argError, err.Error())
+		slog.Info(msgUserAuth, argError, err.Error())
 		_ = render.Render(w, r, ServerErrorRenderer(err))
 		return
 	}

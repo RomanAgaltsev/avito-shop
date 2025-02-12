@@ -69,16 +69,11 @@ func (s *service) UserAuth(ctx context.Context, user model.User) error {
     userInRepo, err := s.repository.CreateUser(ctx, repository.DefaultBackOff, user)
 
     // There is a conflict - user name is already exists in the database
-    if errors.Is(err, repository.ErrConflict) {
-        return ErrUserNameIsAlreadyTaken
-    }
-
-    // If user doesn`t exist or password is wrong
-    if !auth.CheckPasswordHash(user.Password, userInRepo.Password) {
+    if errors.Is(err, repository.ErrConflict) && !auth.CheckPasswordHash(user.Password, userInRepo.Password) {
         return ErrWrongUserNamePassword
     }
 
-    return nil
+    return err
 }
 
 // UserBalance creates new user balance.
