@@ -109,8 +109,76 @@ func (r *Repository) CreateBalance(ctx context.Context, bo *backoff.ExponentialB
 }
 
 // SendCoins transfer given amount of coins from one user to another.
-func (r *Repository) SendCoins(ctx context.Context, fromUser model.User, toUser model.User, amount int) error {
-	return nil
+func (r *Repository) SendCoins(ctx context.Context, bo *backoff.ExponentialBackOff, fromUser model.User, toUser model.User, amount int) error {
+	// Begin transaction
+	tx, err := r.db.Begin(ctx)
+	if err != nil {
+		return err
+	}
+	// Defer transaction rollback
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	// Create query with transaction
+	qtx := r.q.WithTx(tx)
+
+	// Withdraw from the balance of user that sends
+	fromUserBalance, err := backoff.RetryWithData(func() (int32, error) {
+		return qtx.UpdateBalance(ctx, queries.UpdateBalanceParams{
+			Username: fromUser.UserName,
+			Coins:    int32(-amount),
+		})
+	}, bo)
+	if err != nil {
+		_ = tx.Rollback(ctx)
+		return err
+	}
+
+	// If the balance has become negative after withdrawal,
+	// rollback the transaction and return the negative balance error
+	if fromUserBalance < 0 {
+		_ = tx.Rollback(ctx)
+		return ErrNegativeBalance
+	}
+
+	// Balance enough to withdraw - create new history record for user that sends
+	_, err = backoff.RetryWithData(func() (int32, error) {
+		return qtx.CreateHistoryRecord(ctx, queries.CreateHistoryRecordParams{
+			Username: fromUser.UserName,
+			ToUser:   toUser.UserName,
+			Amount:   int32(amount),
+		})
+	}, bo)
+	if err != nil {
+		_ = tx.Rollback(ctx)
+		return err
+	}
+
+	// Update the balance of user that receives
+	_, err = backoff.RetryWithData(func() (int32, error) {
+		return qtx.UpdateBalance(ctx, queries.UpdateBalanceParams{
+			Username: toUser.UserName,
+			Coins:    int32(amount),
+		})
+	}, bo)
+	if err != nil {
+		_ = tx.Rollback(ctx)
+		return err
+	}
+
+	// Create new history record for user that receives
+	_, err = backoff.RetryWithData(func() (int32, error) {
+		return qtx.CreateHistoryRecord(ctx, queries.CreateHistoryRecordParams{
+			Username: toUser.UserName,
+			FromUser: fromUser.UserName,
+			Amount:   int32(amount),
+		})
+	}, bo)
+	if err != nil {
+		_ = tx.Rollback(ctx)
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
 // BuyItem register purhcase of inventory item (merch) for a given user.

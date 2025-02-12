@@ -31,8 +31,8 @@ CREATE TABLE inventory (
 CREATE TABLE history (
     id        SERIAL PRIMARY KEY,
     username  VARCHAR(20) NOT NULL,
-    from_user VARCHAR(20) NOT NULL,
-    to_user   VARCHAR(20) NOT NULL,
+    from_user VARCHAR(20) NOT NULL DEFAULT '',
+    to_user   VARCHAR(20) NOT NULL DEFAULT '',
     amount    INTEGER     NOT NULL DEFAULT 0,
     sent_at   TIMESTAMP   NOT NULL DEFAULT NOW()
 );

@@ -21,6 +21,30 @@ func (q *Queries) CreateBalance(ctx context.Context, username string) (int32, er
 	return id, err
 }
 
+const createHistoryRecord = `-- name: CreateHistoryRecord :one
+INSERT INTO history (username, from_user, to_user, amount)
+VALUES ($1, $2, $3, $4) RETURNING id
+`
+
+type CreateHistoryRecordParams struct {
+	Username string
+	FromUser string
+	ToUser   string
+	Amount   int32
+}
+
+func (q *Queries) CreateHistoryRecord(ctx context.Context, arg CreateHistoryRecordParams) (int32, error) {
+	row := q.db.QueryRow(ctx, createHistoryRecord,
+		arg.Username,
+		arg.FromUser,
+		arg.ToUser,
+		arg.Amount,
+	)
+	var id int32
+	err := row.Scan(&id)
+	return id, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (username, password)
 VALUES ($1, $2) RETURNING id

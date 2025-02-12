@@ -20,3 +20,7 @@ WHERE username = $1 LIMIT 1;
 UPDATE balance
 SET coins = coins + $2
 WHERE username = $1 RETURNING coins;
+
+-- name: CreateHistoryRecord :one
+INSERT INTO history (username, from_user, to_user, amount)
+VALUES ($1, $2, $3, $4) RETURNING id;
