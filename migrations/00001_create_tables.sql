@@ -36,6 +36,19 @@ CREATE TABLE history (
     amount    INTEGER     NOT NULL DEFAULT 0,
     sent_at   TIMESTAMP   NOT NULL DEFAULT NOW()
 );
+
+INSERT INTO merch (type, price)
+VALUES
+    ('t-shirt', 80),
+    ('cup', 20),
+    ('book', 50),
+    ('pen', 10),
+    ('powerbank', 200),
+    ('hoody', 300),
+    ('umbrella', 200),
+    ('socks', 10),
+    ('wallet', 50),
+    ('wallet', 500);
 -- +goose StatementEnd
 
 -- +goose Down
