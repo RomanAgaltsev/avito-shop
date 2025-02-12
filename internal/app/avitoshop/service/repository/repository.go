@@ -228,8 +228,17 @@ func (r *Repository) BuyItem(ctx context.Context, bo *backoff.ExponentialBackOff
 	return tx.Commit(ctx)
 }
 
-func (r *Repository) GetBalance(ctx context.Context, user model.User) (int, error) {
-	return 0, nil
+func (r *Repository) GetBalance(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) (int, error) {
+	// Get user balance from DB
+	userBalance, err := backoff.RetryWithData(func() (queries.Balance, error) {
+		return r.q.GetBalance(ctx, user.UserName)
+	}, bo)
+
+	if err != nil {
+		return 0, err
+	}
+
+	return int(userBalance.Coins), nil
 }
 
 func (r *Repository) GetInventory(ctx context.Context, user model.User) ([]model.InventoryItem, error) {
