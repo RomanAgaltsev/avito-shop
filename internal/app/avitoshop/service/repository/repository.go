@@ -46,3 +46,15 @@ func (r *Repository) SendCoins(ctx context.Context, fromUser model.User, toUser 
 func (r *Repository) BuyItem(ctx context.Context, user model.User, item model.InventoryItem) error {
 	return nil
 }
+
+func (r *Repository) GetBalance(ctx context.Context, user model.User) (int, error) {
+	return 0, nil
+}
+
+func (r *Repository) GetInventory(ctx context.Context, user model.User) ([]model.InventoryItem, error) {
+	return nil, nil
+}
+
+func (r *Repository) GetHistory(ctx context.Context, user model.User) (model.CoinsHistory, error) {
+	return model.CoinsHistory{}, nil
+}

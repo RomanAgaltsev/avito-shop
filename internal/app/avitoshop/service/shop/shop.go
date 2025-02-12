@@ -35,6 +35,9 @@ type Repository interface {
     CreateBalance(ctx context.Context, user model.User) error
     SendCoins(ctx context.Context, fromUser model.User, toUser model.User, amount int) error
     BuyItem(ctx context.Context, user model.User, item model.InventoryItem) error
+    GetBalance(ctx context.Context, user model.User) (int, error)
+    GetInventory(ctx context.Context, user model.User) ([]model.InventoryItem, error)
+    GetHistory(ctx context.Context, user model.User) (model.CoinsHistory, error)
 }
 
 // NewService creates new user service.
@@ -111,5 +114,49 @@ func (s *service) BuyItem(ctx context.Context, user model.User, item model.Inven
 
 // UserInfo returns user info about coins, inventory and transaction history.
 func (s *service) UserInfo(ctx context.Context, user model.User) (model.Info, error) {
-    return model.Info{}, nil
+    coins, err := s.repository.GetBalance(ctx, user)
+    if err != nil {
+        return model.Info{}, err
+    }
+
+    inventory, err := s.repository.GetInventory(ctx, user)
+    if err != nil {
+        return model.Info{}, err
+    }
+
+    history, err := s.repository.GetHistory(ctx, user)
+    if err != nil {
+        return model.Info{}, err
+    }
+
+    // There is a compromise between the number of database accesses and the memory allocations for slices capacity.
+    received := make([]model.CoinsReceiving, 0, len(history))
+    sent := make([]model.CoinsSending, 0, len(history))
+
+    for _, rec := range history {
+        if rec.FromUser != "" {
+            received = append(received, model.CoinsReceiving{
+                FromUser: rec.FromUser,
+                Amount:   int(rec.Amount),
+            })
+            continue
+        }
+        if rec.ToUser != "" {
+            sent = append(sent, model.CoinsSending{
+                ToUser: rec.ToUser,
+                Amount: int(rec.Amount),
+            })
+        }
+    }
+
+    coinHistory := model.CoinsHistory{
+        Received: received,
+        Sent:     sent,
+    }
+
+    return model.Info{
+        Coins:        coins,
+        Inventory:    inventory,
+        CoinsHistory: coinHistory,
+    }, nil
 }
