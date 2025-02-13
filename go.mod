@@ -14,6 +14,7 @@ require (
 	github.com/onsi/gomega v1.36.2
 	github.com/pressly/goose/v3 v3.24.1
 	github.com/samber/slog-chi v1.13.1
+	go.uber.org/mock v0.5.0
 	go.uber.org/zap v1.27.0
 	go.uber.org/zap/exp v0.3.0
 	golang.org/x/crypto v0.33.0

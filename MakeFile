@@ -8,6 +8,10 @@ secretkey = secret
 
 #  Local commands
 
+.PHONY: gen-mock
+gen-mock:	# Generate mocks
+	go generate ./...
+
 .PHONY: test
 test:	# Execute the unit tests
 	go test -count=1 -v -timeout 30s -coverprofile cover.out ./...
