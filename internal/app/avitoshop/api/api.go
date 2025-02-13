@@ -1,6 +1,7 @@
 package api
 
 import (
+	"errors"
 	"log/slog"
 	"net/http"
 
@@ -53,7 +54,15 @@ func (h *Handler) Auth(w http.ResponseWriter, r *http.Request) {
 
 	// Auth user
 	err := h.service.UserAuth(ctx, user)
-	if err != nil {
+	//
+	if err != nil && errors.Is(err, shop.ErrWrongUserNamePassword) {
+		// There is a problem with login/password
+		slog.Info(msgUserAuth, argError, err.Error())
+		_ = render.Render(w, r, ErrWrongLoginPassword)
+		return
+	}
+	//
+	if err != nil && !errors.Is(err, shop.ErrWrongUserNamePassword) {
 		// Something has gone wrong
 		slog.Info(msgUserAuth, argError, err.Error())
 		_ = render.Render(w, r, ServerErrorRenderer(err))
@@ -76,7 +85,7 @@ func (h *Handler) Auth(w http.ResponseWriter, r *http.Request) {
 		Token: tokenString,
 	}
 
-	// Render the list of orders to response
+	// Render the response
 	if err = render.Render(w, r, &authResponse); err != nil {
 		_ = render.Render(w, r, ErrorRenderer(err))
 		return

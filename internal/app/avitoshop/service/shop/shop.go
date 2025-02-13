@@ -63,17 +63,26 @@ func (s *service) UserAuth(ctx context.Context, user model.User) error {
     if err != nil {
         return err
     }
+    password := user.Password
     user.Password = hash
 
     // Create user in the repository
     userInRepo, err := s.repository.CreateUser(ctx, repository.DefaultBackOff, user)
 
     // There is a conflict - user name is already exists in the database
-    if errors.Is(err, repository.ErrConflict) && !auth.CheckPasswordHash(user.Password, userInRepo.Password) {
+    if errors.Is(err, repository.ErrConflict) && !auth.CheckPasswordHash(password, userInRepo.Password) {
         return ErrWrongUserNamePassword
     }
 
-    return err
+    if err != nil && !errors.Is(err, repository.ErrConflict) {
+        return err
+    }
+
+    if err == nil {
+        return s.repository.CreateBalance(ctx, repository.DefaultBackOff, user)
+    }
+
+    return nil
 }
 
 // UserBalance creates new user balance.

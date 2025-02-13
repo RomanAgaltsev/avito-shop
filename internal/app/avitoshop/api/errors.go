@@ -19,7 +19,7 @@ type ErrorResponse struct {
 	Err        error  `json:"-"`
 	StatusCode int    `json:"-"`
 	StatusText string `json:"status_text"`
-	Message    string `json:"message"`
+	Message    string `json:"errors"`
 }
 
 func (e *ErrorResponse) Render(w http.ResponseWriter, r *http.Request) error {

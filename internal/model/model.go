@@ -24,7 +24,8 @@ func (u *User) Bind(r *http.Request) error {
 
 // AuthResponse contains Auth hanlder response.
 type AuthResponse struct {
-	Token string `json:"token"`
+	Token  string `json:"token,omitempty"`
+	Errors string `json:"errors,omitempty"`
 }
 
 // Render tunes rendering of AuthResponse structure.
