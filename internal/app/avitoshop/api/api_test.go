@@ -46,16 +46,18 @@ var _ = Describe("Handler", func() {
 		user      model.User
 		userBytes []byte
 
-		//item model.InventoryItem
+		coinsSending      model.CoinsSending
+		coinsSendingBytes []byte
 
 		ja *jwtauth.JWTAuth
 
 		expectAuthResponse model.AuthResponse
 
-		username  string
-		secretKey string
-		token     string
-		itemType  string
+		username   string
+		toUsername string
+		secretKey  string
+		token      string
+		itemType   string
 	)
 
 	BeforeEach(func() {
@@ -225,7 +227,7 @@ var _ = Describe("Handler", func() {
 				repo.EXPECT().CreateUser(gomock.Any(), gomock.Any(), gomock.Any()).Return(user, repository.ErrConflict).Times(1)
 			})
 
-			It("returns status 'OK' (401) and no token", func() {
+			It("returns status 'Unauthorized' (401) and no token", func() {
 				response, err := http.Post(server.URL()+endpoint, ContentTypeJSON, bytes.NewReader(userBytes))
 
 				Expect(err).ShouldNot(HaveOccurred())
@@ -296,11 +298,173 @@ var _ = Describe("Handler", func() {
 		})
 	})
 
+	Context("Receiving request at the /api/sendCoin endpoint", func() {
+		BeforeEach(func() {
+			endpoint = "/api/sendCoin"
+			server.AppendHandlers(handler.SendCoins)
+
+			secretKey = "secret"
+			username = "user"
+
+			ja = auth.NewAuth(secretKey)
+			Expect(ja).ShouldNot(BeNil())
+
+			_, token, err = auth.NewJWTToken(ja, username)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(token).NotTo(BeEmpty())
+		})
+
+		When("the method is POST and balance enough to send", func() {
+			BeforeEach(func() {
+				secretKey = "secret"
+				username = "user"
+				toUsername = "user1"
+
+				coinsSending = model.CoinsSending{
+					ToUser: toUsername,
+					Amount: 100,
+				}
+
+				coinsSendingBytes, err = json.Marshal(&coinsSending)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				ja = auth.NewAuth(secretKey)
+				Expect(ja).ShouldNot(BeNil())
+
+				_, token, err = auth.NewJWTToken(ja, username)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(token).NotTo(BeEmpty())
+
+				repo.EXPECT().SendCoins(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			})
+
+			It("returns status 'OK' (200)", func() {
+				request, err := http.NewRequest(http.MethodPost, server.URL()+endpoint, bytes.NewReader(coinsSendingBytes))
+				Expect(err).ShouldNot(HaveOccurred())
+
+				request.Header.Set("Content-Type", ContentTypeJSON)
+				request.Header.Add("Authorization", "Bearer "+token)
+
+				response, err := http.DefaultClient.Do(request)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(response.StatusCode).Should(Equal(http.StatusOK))
+			})
+		})
+
+		When("the method is POST and balance is not enough to send", func() {
+			BeforeEach(func() {
+				secretKey = "secret"
+				username = "user"
+				toUsername = "user1"
+
+				coinsSending = model.CoinsSending{
+					ToUser: toUsername,
+					Amount: 100,
+				}
+
+				coinsSendingBytes, err = json.Marshal(&coinsSending)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				ja = auth.NewAuth(secretKey)
+				Expect(ja).ShouldNot(BeNil())
+
+				_, token, err = auth.NewJWTToken(ja, username)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(token).NotTo(BeEmpty())
+
+				repo.EXPECT().SendCoins(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(repository.ErrNegativeBalance).Times(1)
+			})
+
+			It("returns status 'Bad request' (400)", func() {
+				request, err := http.NewRequest(http.MethodPost, server.URL()+endpoint, bytes.NewReader(coinsSendingBytes))
+				Expect(err).ShouldNot(HaveOccurred())
+
+				request.Header.Set("Content-Type", ContentTypeJSON)
+				request.Header.Add("Authorization", "Bearer "+token)
+
+				response, err := http.DefaultClient.Do(request)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(response.StatusCode).Should(Equal(http.StatusBadRequest))
+			})
+		})
+
+		When("the method is POST and payload is invalid", func() {
+			BeforeEach(func() {
+				secretKey = "secret"
+				username = "user"
+				toUsername = ""
+
+				coinsSending = model.CoinsSending{
+					ToUser: toUsername,
+					Amount: 100,
+				}
+
+				coinsSendingBytes, err = json.Marshal(&coinsSending)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				ja = auth.NewAuth(secretKey)
+				Expect(ja).ShouldNot(BeNil())
+
+				_, token, err = auth.NewJWTToken(ja, username)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(token).NotTo(BeEmpty())
+			})
+
+			It("returns status 'Bad request' (400)", func() {
+				request, err := http.NewRequest(http.MethodPost, server.URL()+endpoint, bytes.NewReader(coinsSendingBytes))
+				Expect(err).ShouldNot(HaveOccurred())
+
+				request.Header.Set("Content-Type", ContentTypeJSON)
+				request.Header.Add("Authorization", "Bearer "+token)
+
+				response, err := http.DefaultClient.Do(request)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(response.StatusCode).Should(Equal(http.StatusBadRequest))
+			})
+		})
+
+		When("the method is POST, everything is right with the request, but something has gone wrong with service", func() {
+			BeforeEach(func() {
+				secretKey = "secret"
+				username = "user"
+				toUsername = "user1"
+
+				coinsSending = model.CoinsSending{
+					ToUser: toUsername,
+					Amount: 100,
+				}
+
+				coinsSendingBytes, err = json.Marshal(&coinsSending)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				ja = auth.NewAuth(secretKey)
+				Expect(ja).ShouldNot(BeNil())
+
+				_, token, err = auth.NewJWTToken(ja, username)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(token).NotTo(BeEmpty())
+
+				repo.EXPECT().SendCoins(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errSomethingStrange).Times(1)
+			})
+
+			It("returns status 'Internal server error' (500)", func() {
+				request, err := http.NewRequest(http.MethodPost, server.URL()+endpoint, bytes.NewReader(coinsSendingBytes))
+				Expect(err).ShouldNot(HaveOccurred())
+
+				request.Header.Set("Content-Type", ContentTypeJSON)
+				request.Header.Add("Authorization", "Bearer "+token)
+
+				response, err := http.DefaultClient.Do(request)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(response.StatusCode).Should(Equal(http.StatusInternalServerError))
+			})
+		})
+	})
+
 	Context("Receiving request at the /api/buy/ endpoint", func() {
 		BeforeEach(func() {
 			endpoint = "/api/buy/"
 			server.AppendHandlers(handler.BuyItem)
-			//server.RouteToHandler("GET", "/api/buy/book", handler.BuyItem)
 
 			secretKey = "secret"
 			username = "user"
@@ -335,7 +499,7 @@ var _ = Describe("Handler", func() {
 				Expect(err).ShouldNot(HaveOccurred())
 
 				request.Header.Add("Authorization", "Bearer "+token)
-				request.SetPathValue("item", itemType)
+				//request.SetPathValue("item", itemType)
 
 				response, err := http.DefaultClient.Do(request)
 				Expect(err).ShouldNot(HaveOccurred())

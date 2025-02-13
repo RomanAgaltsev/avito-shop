@@ -117,6 +117,12 @@ func (h *Handler) SendCoins(w http.ResponseWriter, r *http.Request) {
 
 	// Send coins
 	err = h.service.SendCoins(ctx, fromUser, toUser, amount)
+	if err != nil && errors.Is(err, shop.ErrNotEnoughBalance) {
+		slog.Info(msgSendCoins, argError, err.Error())
+		_ = render.Render(w, r, ErrNotEnoughCoins)
+		return
+	}
+
 	if err != nil {
 		// Something has gone wrong
 		slog.Info(msgSendCoins, argError, err.Error())
