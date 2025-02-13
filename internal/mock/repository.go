@@ -13,9 +13,10 @@ import (
 	context "context"
 	reflect "reflect"
 
-	model "github.com/RomanAgaltsev/avito-shop/internal/model"
 	v4 "github.com/cenkalti/backoff/v4"
 	gomock "go.uber.org/mock/gomock"
+
+	model "github.com/RomanAgaltsev/avito-shop/internal/model"
 )
 
 // MockRepository is a mock of Repository interface.
