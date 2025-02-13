@@ -52,6 +52,9 @@ var _ = Describe("Handler", func() {
 		ja *jwtauth.JWTAuth
 
 		expectAuthResponse model.AuthResponse
+		expectBalance      int
+		expectInventory    []model.InventoryItem
+		expectHistory      model.CoinsHistory
 
 		username   string
 		toUsername string
@@ -316,8 +319,6 @@ var _ = Describe("Handler", func() {
 
 		When("the method is POST and balance enough to send", func() {
 			BeforeEach(func() {
-				secretKey = "secret"
-				username = "user"
 				toUsername = "user1"
 
 				coinsSending = model.CoinsSending{
@@ -327,13 +328,6 @@ var _ = Describe("Handler", func() {
 
 				coinsSendingBytes, err = json.Marshal(&coinsSending)
 				Expect(err).ShouldNot(HaveOccurred())
-
-				ja = auth.NewAuth(secretKey)
-				Expect(ja).ShouldNot(BeNil())
-
-				_, token, err = auth.NewJWTToken(ja, username)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(token).NotTo(BeEmpty())
 
 				repo.EXPECT().SendCoins(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
 			})
@@ -353,8 +347,6 @@ var _ = Describe("Handler", func() {
 
 		When("the method is POST and balance is not enough to send", func() {
 			BeforeEach(func() {
-				secretKey = "secret"
-				username = "user"
 				toUsername = "user1"
 
 				coinsSending = model.CoinsSending{
@@ -364,13 +356,6 @@ var _ = Describe("Handler", func() {
 
 				coinsSendingBytes, err = json.Marshal(&coinsSending)
 				Expect(err).ShouldNot(HaveOccurred())
-
-				ja = auth.NewAuth(secretKey)
-				Expect(ja).ShouldNot(BeNil())
-
-				_, token, err = auth.NewJWTToken(ja, username)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(token).NotTo(BeEmpty())
 
 				repo.EXPECT().SendCoins(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(repository.ErrNegativeBalance).Times(1)
 			})
@@ -390,8 +375,6 @@ var _ = Describe("Handler", func() {
 
 		When("the method is POST and payload is invalid", func() {
 			BeforeEach(func() {
-				secretKey = "secret"
-				username = "user"
 				toUsername = ""
 
 				coinsSending = model.CoinsSending{
@@ -401,13 +384,6 @@ var _ = Describe("Handler", func() {
 
 				coinsSendingBytes, err = json.Marshal(&coinsSending)
 				Expect(err).ShouldNot(HaveOccurred())
-
-				ja = auth.NewAuth(secretKey)
-				Expect(ja).ShouldNot(BeNil())
-
-				_, token, err = auth.NewJWTToken(ja, username)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(token).NotTo(BeEmpty())
 			})
 
 			It("returns status 'Bad request' (400)", func() {
@@ -425,8 +401,6 @@ var _ = Describe("Handler", func() {
 
 		When("the method is POST, everything is right with the request, but something has gone wrong with service", func() {
 			BeforeEach(func() {
-				secretKey = "secret"
-				username = "user"
 				toUsername = "user1"
 
 				coinsSending = model.CoinsSending{
@@ -436,13 +410,6 @@ var _ = Describe("Handler", func() {
 
 				coinsSendingBytes, err = json.Marshal(&coinsSending)
 				Expect(err).ShouldNot(HaveOccurred())
-
-				ja = auth.NewAuth(secretKey)
-				Expect(ja).ShouldNot(BeNil())
-
-				_, token, err = auth.NewJWTToken(ja, username)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(token).NotTo(BeEmpty())
 
 				repo.EXPECT().SendCoins(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(errSomethingStrange).Times(1)
 			})
@@ -479,16 +446,6 @@ var _ = Describe("Handler", func() {
 
 		When("the method is GET and everything is right", func() {
 			BeforeEach(func() {
-				secretKey = "secret"
-				username = "user"
-
-				ja = auth.NewAuth(secretKey)
-				Expect(ja).ShouldNot(BeNil())
-
-				_, token, err = auth.NewJWTToken(ja, username)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(token).NotTo(BeEmpty())
-
 				itemType = "book"
 
 				repo.EXPECT().BuyItem(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
@@ -499,7 +456,6 @@ var _ = Describe("Handler", func() {
 				Expect(err).ShouldNot(HaveOccurred())
 
 				request.Header.Add("Authorization", "Bearer "+token)
-				//request.SetPathValue("item", itemType)
 
 				response, err := http.DefaultClient.Do(request)
 				Expect(err).ShouldNot(HaveOccurred())
@@ -509,16 +465,6 @@ var _ = Describe("Handler", func() {
 
 		When("the method is GET and item is empty", func() {
 			BeforeEach(func() {
-				secretKey = "secret"
-				username = "user"
-
-				ja = auth.NewAuth(secretKey)
-				Expect(ja).ShouldNot(BeNil())
-
-				_, token, err = auth.NewJWTToken(ja, username)
-				Expect(err).NotTo(HaveOccurred())
-				Expect(token).NotTo(BeEmpty())
-
 				itemType = ""
 			})
 
@@ -533,6 +479,115 @@ var _ = Describe("Handler", func() {
 				Expect(response.StatusCode).Should(Equal(http.StatusBadRequest))
 			})
 		})
+	})
+
+	Context("Receiving request at the /api/info endpoint", func() {
+		BeforeEach(func() {
+			endpoint = "/api/info"
+			server.AppendHandlers(handler.Info)
+
+			secretKey = "secret"
+			username = "user"
+
+			ja = auth.NewAuth(secretKey)
+			Expect(ja).ShouldNot(BeNil())
+
+			_, token, err = auth.NewJWTToken(ja, username)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(token).NotTo(BeEmpty())
+		})
+
+		When("the method is GET and there is an info to return", func() {
+			BeforeEach(func() {
+				expectBalance = 100
+				expectInventory = []model.InventoryItem{
+					{Type: "book", Quantity: 1},
+				}
+				expectHistory = model.CoinsHistory{
+					Received: []model.CoinsReceiving{
+						{FromUser: "user1", Amount: 100},
+					},
+					Sent: []model.CoinsSending{
+						{ToUser: "user2", Amount: 200},
+					},
+				}
+
+				repo.EXPECT().GetBalance(gomock.Any(), gomock.Any(), gomock.Any()).Return(expectBalance, nil).Times(1)
+				repo.EXPECT().GetInventory(gomock.Any(), gomock.Any(), gomock.Any()).Return(expectInventory, nil).Times(1)
+				repo.EXPECT().GetHistory(gomock.Any(), gomock.Any(), gomock.Any()).Return(expectHistory, nil).Times(1)
+			})
+
+			It("returns status 'OK' (200) and an info", func() {
+				request, err := http.NewRequest(http.MethodGet, server.URL()+endpoint, nil)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				request.Header.Add("Authorization", "Bearer "+token)
+
+				response, err := http.DefaultClient.Do(request)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(response.StatusCode).Should(Equal(http.StatusOK))
+
+				var info model.Info
+				err = json.NewDecoder(response.Body).Decode(&info)
+				Expect(info.Coins).To(Equal(expectBalance))
+				Expect(info.Inventory).Should(HaveLen(len(expectInventory)))
+				Expect(info.CoinsHistory.Received).Should(HaveLen(len(expectHistory.Received)))
+				Expect(info.CoinsHistory.Sent).Should(HaveLen(len(expectHistory.Sent)))
+			})
+		})
+
+		When("the method is GET and there is no info to return", func() {
+			BeforeEach(func() {
+				expectBalance = 0
+				expectInventory = []model.InventoryItem{}
+				expectHistory = model.CoinsHistory{
+					Received: []model.CoinsReceiving{},
+					Sent:     []model.CoinsSending{},
+				}
+
+				repo.EXPECT().GetBalance(gomock.Any(), gomock.Any(), gomock.Any()).Return(expectBalance, nil).Times(1)
+				repo.EXPECT().GetInventory(gomock.Any(), gomock.Any(), gomock.Any()).Return(expectInventory, nil).Times(1)
+				repo.EXPECT().GetHistory(gomock.Any(), gomock.Any(), gomock.Any()).Return(expectHistory, nil).Times(1)
+			})
+
+			It("returns status 'OK' (200) and no info", func() {
+				request, err := http.NewRequest(http.MethodGet, server.URL()+endpoint, nil)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				request.Header.Add("Authorization", "Bearer "+token)
+
+				response, err := http.DefaultClient.Do(request)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(response.StatusCode).Should(Equal(http.StatusOK))
+
+				var info model.Info
+				err = json.NewDecoder(response.Body).Decode(&info)
+				Expect(info.Coins).To(Equal(expectBalance))
+				Expect(info.Inventory).Should(HaveLen(len(expectInventory)))
+				Expect(info.CoinsHistory.Received).Should(HaveLen(len(expectHistory.Received)))
+				Expect(info.CoinsHistory.Sent).Should(HaveLen(len(expectHistory.Sent)))
+			})
+		})
+
+		When("the method is GET, but something has gone wrong with the service", func() {
+			BeforeEach(func() {
+				expectBalance = 0
+
+				repo.EXPECT().GetBalance(gomock.Any(), gomock.Any(), gomock.Any()).Return(expectBalance, errSomethingStrange).Times(1)
+			})
+
+			It("returns status 'Internal server error' (500)", func() {
+				request, err := http.NewRequest(http.MethodGet, server.URL()+endpoint, nil)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				request.Header.Add("Authorization", "Bearer "+token)
+
+				response, err := http.DefaultClient.Do(request)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(response.StatusCode).Should(Equal(http.StatusInternalServerError))
+			})
+		})
+
 	})
 
 })
