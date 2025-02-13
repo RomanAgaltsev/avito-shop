@@ -12,6 +12,10 @@ secretkey = secret
 test:	# Execute the unit tests
 	go test -count=1 -v -timeout 30s -coverprofile cover.out ./...
 
+.PHONY: lint
+lint:
+	golangci-lint run ./...
+
 .PHONY: ginkgo
 ginkgo:	# Execute the ginkgo unit tests
 	ginkgo ./...
