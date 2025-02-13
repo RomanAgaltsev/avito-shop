@@ -4,8 +4,8 @@ import (
 	"errors"
 	"log/slog"
 	"net/http"
+	"strings"
 
-	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/render"
 
 	"github.com/RomanAgaltsev/avito-shop/internal/app/avitoshop/service/shop"
@@ -132,6 +132,12 @@ func (h *Handler) BuyItem(w http.ResponseWriter, r *http.Request) {
 	// Get context from request
 	ctx := r.Context()
 
+	itemType := strings.TrimSuffix(r.URL.Path, "/api/buy/")
+	if itemType == "" {
+		_ = render.Render(w, r, ErrEmptyItem)
+		return
+	}
+
 	// Get user from request
 	user, err := auth.UserFromRequest(r, h.cfg.SecretKey)
 	if err != nil {
@@ -140,7 +146,7 @@ func (h *Handler) BuyItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	item := model.InventoryItem{
-		Type:     chi.URLParam(r, "item"),
+		Type:     itemType,
 		Quantity: 1,
 	}
 

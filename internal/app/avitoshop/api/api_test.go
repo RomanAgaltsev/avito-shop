@@ -6,7 +6,7 @@ import (
 	"errors"
 	"net/http"
 
-	//"github.com/go-chi/jwtauth/v5"
+	"github.com/go-chi/jwtauth/v5"
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/onsi/gomega/ghttp"
@@ -46,14 +46,16 @@ var _ = Describe("Handler", func() {
 		user      model.User
 		userBytes []byte
 
-		//ja *jwtauth.JWTAuth
+		//item model.InventoryItem
+
+		ja *jwtauth.JWTAuth
 
 		expectAuthResponse model.AuthResponse
-		//expectInfo  model.Info
 
-		//username  string
-		//secretKey string
-		//tokenString string
+		username  string
+		secretKey string
+		token     string
+		itemType  string
 	)
 
 	BeforeEach(func() {
@@ -106,12 +108,12 @@ var _ = Describe("Handler", func() {
 			})
 
 			It("returns status 'OK' (200) and a token", func() {
-				resp, err := http.Post(server.URL()+endpoint, ContentTypeJSON, bytes.NewReader(userBytes))
+				response, err := http.Post(server.URL()+endpoint, ContentTypeJSON, bytes.NewReader(userBytes))
 
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+				Expect(response.StatusCode).Should(Equal(http.StatusOK))
 
-				err = json.NewDecoder(resp.Body).Decode(&expectAuthResponse)
+				err = json.NewDecoder(response.Body).Decode(&expectAuthResponse)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(expectAuthResponse.Token).NotTo(BeEmpty())
 				Expect(expectAuthResponse.Errors).To(BeEmpty())
@@ -132,12 +134,12 @@ var _ = Describe("Handler", func() {
 			})
 
 			It("returns status 'Bad request' (400) and no token", func() {
-				resp, err := http.Post(server.URL()+endpoint, ContentTypeJSON, bytes.NewReader(userBytes))
+				response, err := http.Post(server.URL()+endpoint, ContentTypeJSON, bytes.NewReader(userBytes))
 
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(resp.StatusCode).Should(Equal(http.StatusBadRequest))
+				Expect(response.StatusCode).Should(Equal(http.StatusBadRequest))
 
-				err = json.NewDecoder(resp.Body).Decode(&expectAuthResponse)
+				err = json.NewDecoder(response.Body).Decode(&expectAuthResponse)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(expectAuthResponse.Token).To(BeEmpty())
 				Expect(expectAuthResponse.Errors).NotTo(BeEmpty())
@@ -158,12 +160,12 @@ var _ = Describe("Handler", func() {
 			})
 
 			It("returns status 'Bad request' (400) and no token", func() {
-				resp, err := http.Post(server.URL()+endpoint, ContentTypeText, bytes.NewReader(userBytes))
+				response, err := http.Post(server.URL()+endpoint, ContentTypeText, bytes.NewReader(userBytes))
 
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(resp.StatusCode).Should(Equal(http.StatusBadRequest))
+				Expect(response.StatusCode).Should(Equal(http.StatusBadRequest))
 
-				err = json.NewDecoder(resp.Body).Decode(&expectAuthResponse)
+				err = json.NewDecoder(response.Body).Decode(&expectAuthResponse)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(expectAuthResponse.Token).To(BeEmpty())
 				Expect(expectAuthResponse.Errors).NotTo(BeEmpty())
@@ -191,12 +193,12 @@ var _ = Describe("Handler", func() {
 			})
 
 			It("returns status 'OK' (200) and a token", func() {
-				resp, err := http.Post(server.URL()+endpoint, ContentTypeJSON, bytes.NewReader(userBytes))
+				response, err := http.Post(server.URL()+endpoint, ContentTypeJSON, bytes.NewReader(userBytes))
 
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(resp.StatusCode).Should(Equal(http.StatusOK))
+				Expect(response.StatusCode).Should(Equal(http.StatusOK))
 
-				err = json.NewDecoder(resp.Body).Decode(&expectAuthResponse)
+				err = json.NewDecoder(response.Body).Decode(&expectAuthResponse)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(expectAuthResponse.Token).NotTo(BeEmpty())
 				Expect(expectAuthResponse.Errors).To(BeEmpty())
@@ -224,12 +226,12 @@ var _ = Describe("Handler", func() {
 			})
 
 			It("returns status 'OK' (401) and no token", func() {
-				resp, err := http.Post(server.URL()+endpoint, ContentTypeJSON, bytes.NewReader(userBytes))
+				response, err := http.Post(server.URL()+endpoint, ContentTypeJSON, bytes.NewReader(userBytes))
 
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(resp.StatusCode).Should(Equal(http.StatusUnauthorized))
+				Expect(response.StatusCode).Should(Equal(http.StatusUnauthorized))
 
-				err = json.NewDecoder(resp.Body).Decode(&expectAuthResponse)
+				err = json.NewDecoder(response.Body).Decode(&expectAuthResponse)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(expectAuthResponse.Token).To(BeEmpty())
 				Expect(expectAuthResponse.Errors).NotTo(BeEmpty())
@@ -252,12 +254,12 @@ var _ = Describe("Handler", func() {
 			})
 
 			It("returns status 'Internal server error' (500)", func() {
-				resp, err := http.Post(server.URL()+endpoint, ContentTypeJSON, bytes.NewReader(userBytes))
+				response, err := http.Post(server.URL()+endpoint, ContentTypeJSON, bytes.NewReader(userBytes))
 
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(resp.StatusCode).Should(Equal(http.StatusInternalServerError))
+				Expect(response.StatusCode).Should(Equal(http.StatusInternalServerError))
 
-				err = json.NewDecoder(resp.Body).Decode(&expectAuthResponse)
+				err = json.NewDecoder(response.Body).Decode(&expectAuthResponse)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(expectAuthResponse.Token).To(BeEmpty())
 				Expect(expectAuthResponse.Errors).NotTo(BeEmpty())
@@ -281,16 +283,92 @@ var _ = Describe("Handler", func() {
 			})
 
 			It("returns status 'Internal server error' (500)", func() {
-				resp, err := http.Post(server.URL()+endpoint, ContentTypeJSON, bytes.NewReader(userBytes))
+				response, err := http.Post(server.URL()+endpoint, ContentTypeJSON, bytes.NewReader(userBytes))
 
 				Expect(err).ShouldNot(HaveOccurred())
-				Expect(resp.StatusCode).Should(Equal(http.StatusInternalServerError))
+				Expect(response.StatusCode).Should(Equal(http.StatusInternalServerError))
 
-				err = json.NewDecoder(resp.Body).Decode(&expectAuthResponse)
+				err = json.NewDecoder(response.Body).Decode(&expectAuthResponse)
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(expectAuthResponse.Token).To(BeEmpty())
 				Expect(expectAuthResponse.Errors).NotTo(BeEmpty())
 			})
 		})
 	})
+
+	Context("Receiving request at the /api/buy/ endpoint", func() {
+		BeforeEach(func() {
+			endpoint = "/api/buy/"
+			server.AppendHandlers(handler.BuyItem)
+			//server.RouteToHandler("GET", "/api/buy/book", handler.BuyItem)
+
+			secretKey = "secret"
+			username = "user"
+
+			ja = auth.NewAuth(secretKey)
+			Expect(ja).ShouldNot(BeNil())
+
+			_, token, err = auth.NewJWTToken(ja, username)
+			Expect(err).NotTo(HaveOccurred())
+			Expect(token).NotTo(BeEmpty())
+		})
+
+		When("the method is GET and everything is right", func() {
+			BeforeEach(func() {
+				secretKey = "secret"
+				username = "user"
+
+				ja = auth.NewAuth(secretKey)
+				Expect(ja).ShouldNot(BeNil())
+
+				_, token, err = auth.NewJWTToken(ja, username)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(token).NotTo(BeEmpty())
+
+				itemType = "book"
+
+				repo.EXPECT().BuyItem(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).Times(1)
+			})
+
+			It("returns status 'OK' (200)", func() {
+				request, err := http.NewRequest(http.MethodGet, server.URL()+endpoint+itemType, nil)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				request.Header.Add("Authorization", "Bearer "+token)
+				request.SetPathValue("item", itemType)
+
+				response, err := http.DefaultClient.Do(request)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(response.StatusCode).Should(Equal(http.StatusOK))
+			})
+		})
+
+		When("the method is GET and item is empty", func() {
+			BeforeEach(func() {
+				secretKey = "secret"
+				username = "user"
+
+				ja = auth.NewAuth(secretKey)
+				Expect(ja).ShouldNot(BeNil())
+
+				_, token, err = auth.NewJWTToken(ja, username)
+				Expect(err).NotTo(HaveOccurred())
+				Expect(token).NotTo(BeEmpty())
+
+				itemType = ""
+			})
+
+			It("returns status 'Bad request' (400)", func() {
+				request, err := http.NewRequest(http.MethodGet, server.URL()+endpoint+itemType, nil)
+				Expect(err).ShouldNot(HaveOccurred())
+
+				request.Header.Add("Authorization", "Bearer "+token)
+
+				response, err := http.DefaultClient.Do(request)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(response.StatusCode).Should(Equal(http.StatusBadRequest))
+			})
+		})
+	})
+
 })

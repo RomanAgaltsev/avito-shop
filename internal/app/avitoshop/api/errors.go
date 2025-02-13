@@ -8,6 +8,7 @@ import (
 
 var (
 	ErrBadRequest          = &ErrorResponse{StatusCode: 400, Message: "Bad request"}
+	ErrEmptyItem           = &ErrorResponse{StatusCode: 400, Message: "Empty item"}
 	ErrWrongLoginPassword  = &ErrorResponse{StatusCode: 401, Message: "Wrong login/password"}
 	ErrNotEnoughCoins      = &ErrorResponse{StatusCode: 402, Message: "Not enough coins"}
 	ErrNotFound            = &ErrorResponse{StatusCode: 404, Message: "Resource not found"}
