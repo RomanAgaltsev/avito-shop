@@ -2,7 +2,7 @@ package repository_test
 
 import (
 	"context"
-	//"errors"
+	"errors"
 	"time"
 
 	"github.com/cenkalti/backoff/v4"
@@ -18,8 +18,8 @@ import (
 
 var _ = Describe("Repository", func() {
 	var (
-		err error
-		//errSomethingStrange error
+		err                 error
+		errSomethingStrange error
 
 		ctx context.Context
 		bo  *backoff.ExponentialBackOff
@@ -31,14 +31,13 @@ var _ = Describe("Repository", func() {
 
 		username string
 		password string
-		//userCreatedAt time.Time
 
 		user       model.User
 		expectUser model.User
 	)
 
 	BeforeEach(func() {
-		//errSomethingStrange = errors.New("something strange")
+		errSomethingStrange = errors.New("something strange")
 
 		ctx = context.Background()
 
@@ -117,7 +116,6 @@ var _ = Describe("Repository", func() {
 				Expect(expectUser.Password).To(Equal(password))
 			})
 		})
-
 	})
 
 	Context("Calling CreateBalance method", func() {
@@ -327,10 +325,9 @@ var _ = Describe("Repository", func() {
 				Expect(err).To(Equal(repository.ErrNegativeBalance))
 			})
 		})
-
 	})
 
-	XContext("Calling GetBalance method", func() {
+	Context("Calling GetBalance method", func() {
 		BeforeEach(func() {
 			username = "user"
 			password = "password"
@@ -339,6 +336,46 @@ var _ = Describe("Repository", func() {
 				UserName: username,
 				Password: password,
 			}
+		})
+
+		When("there is no error", func() {
+			BeforeEach(func() {
+				rowID = 1
+
+				var balance int32 = 1000
+
+				rs := pgxmock.NewRows([]string{"id", "username", "coins"}).AddRow(rowID, username, balance)
+				mockPool.ExpectQuery("SELECT .+ FROM balance .+").WithArgs(username).WillReturnRows(rs).Times(1)
+			})
+			AfterEach(func() {
+				err = mockPool.ExpectationsWereMet()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("returns a balance and nil error", func() {
+				result, err := repo.GetBalance(ctx, bo, user)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(result).To(Equal(int(1000)))
+			})
+		})
+
+		When("there is an error", func() {
+			BeforeEach(func() {
+				rowID = 0
+
+				rs := pgxmock.NewRows([]string{"id"}).AddRow(rowID).RowError(int(rowID), errSomethingStrange)
+				mockPool.ExpectQuery("SELECT .+ FROM balance .+").WithArgs(username).WillReturnRows(rs).Times(1)
+			})
+			AfterEach(func() {
+				err = mockPool.ExpectationsWereMet()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("returns zero balance and an error", func() {
+				result, err := repo.GetBalance(ctx, bo, user)
+				Expect(err).Should(HaveOccurred())
+				Expect(result).To(Equal(int(0)))
+			})
 		})
 	})
 
@@ -365,5 +402,4 @@ var _ = Describe("Repository", func() {
 			}
 		})
 	})
-
 })
