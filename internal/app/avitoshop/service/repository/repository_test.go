@@ -166,7 +166,89 @@ var _ = Describe("Repository", func() {
 				Expect(err).Should(HaveOccurred())
 			})
 		})
+	})
 
+	Context("Calling SendCoins method", func() {
+		BeforeEach(func() {
+			username = "user"
+			password = "password"
+
+			user = model.User{
+				UserName: username,
+				Password: password,
+			}
+		})
+
+		When("everything is right", func() {
+			BeforeEach(func() {
+				rowID = 1
+
+				var balanceSender int32 = 900
+				var balanceReceiver int32 = 1100
+				var amount int32 = 100
+				var toUser model.User = model.User{
+					UserName: "user1",
+					Password: "password1",
+				}
+
+				mockPool.ExpectBegin()
+
+				rsUpdateSender := pgxmock.NewRows([]string{"balance"}).AddRow(balanceSender)
+				mockPool.ExpectQuery("UPDATE balance SET .+").WithArgs(username, -amount).WillReturnRows(rsUpdateSender).Times(1)
+
+				rsCreateSender := pgxmock.NewRows([]string{"id"}).AddRow(rowID)
+				mockPool.ExpectQuery("INSERT INTO history .+ VALUES .+").WithArgs(username, "", toUser.UserName, amount).WillReturnRows(rsCreateSender).Times(1)
+
+				rsUpdateReceiver := pgxmock.NewRows([]string{"balance"}).AddRow(balanceReceiver)
+				mockPool.ExpectQuery("UPDATE balance SET .+").WithArgs(toUser.UserName, amount).WillReturnRows(rsUpdateReceiver).Times(1)
+
+				rsCreateReceiver := pgxmock.NewRows([]string{"id"}).AddRow(rowID)
+				mockPool.ExpectQuery("INSERT INTO history .+ VALUES .+").WithArgs(toUser.UserName, username, "", amount).WillReturnRows(rsCreateReceiver).Times(1)
+
+				mockPool.ExpectCommit()
+				mockPool.ExpectRollback()
+
+				err = repo.SendCoins(ctx, bo, user, toUser, int(amount))
+			})
+			AfterEach(func() {
+				err = mockPool.ExpectationsWereMet()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("returns nil error", func() {
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+		})
+
+		When("balance is not enough to send", func() {
+			BeforeEach(func() {
+				rowID = 1
+
+				var balanceSender int32 = 90
+				var amount int32 = 100
+				var toUser model.User = model.User{
+					UserName: "user1",
+					Password: "password1",
+				}
+
+				mockPool.ExpectBegin()
+
+				rsUpdateSender := pgxmock.NewRows([]string{"balance"}).AddRow(-balanceSender)
+				mockPool.ExpectQuery("UPDATE balance SET .+").WithArgs(username, -amount).WillReturnRows(rsUpdateSender).Times(1)
+
+				mockPool.ExpectRollback()
+
+				err = repo.SendCoins(ctx, bo, user, toUser, int(amount))
+			})
+			AfterEach(func() {
+				err = mockPool.ExpectationsWereMet()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("returns negative balance error", func() {
+				Expect(err).To(Equal(repository.ErrNegativeBalance))
+			})
+		})
 	})
 
 })
