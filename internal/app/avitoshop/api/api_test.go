@@ -119,6 +119,8 @@ var _ = Describe("Handler", func() {
 				Expect(response.StatusCode).Should(Equal(http.StatusOK))
 
 				err = json.NewDecoder(response.Body).Decode(&expectAuthResponse)
+				DeferCleanup(response.Body.Close)
+
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(expectAuthResponse.Token).NotTo(BeEmpty())
 				Expect(expectAuthResponse.Errors).To(BeEmpty())
@@ -145,6 +147,8 @@ var _ = Describe("Handler", func() {
 				Expect(response.StatusCode).Should(Equal(http.StatusBadRequest))
 
 				err = json.NewDecoder(response.Body).Decode(&expectAuthResponse)
+				DeferCleanup(response.Body.Close)
+
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(expectAuthResponse.Token).To(BeEmpty())
 				Expect(expectAuthResponse.Errors).NotTo(BeEmpty())
@@ -171,6 +175,8 @@ var _ = Describe("Handler", func() {
 				Expect(response.StatusCode).Should(Equal(http.StatusBadRequest))
 
 				err = json.NewDecoder(response.Body).Decode(&expectAuthResponse)
+				DeferCleanup(response.Body.Close)
+
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(expectAuthResponse.Token).To(BeEmpty())
 				Expect(expectAuthResponse.Errors).NotTo(BeEmpty())
@@ -204,6 +210,8 @@ var _ = Describe("Handler", func() {
 				Expect(response.StatusCode).Should(Equal(http.StatusOK))
 
 				err = json.NewDecoder(response.Body).Decode(&expectAuthResponse)
+				DeferCleanup(response.Body.Close)
+
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(expectAuthResponse.Token).NotTo(BeEmpty())
 				Expect(expectAuthResponse.Errors).To(BeEmpty())
@@ -237,6 +245,8 @@ var _ = Describe("Handler", func() {
 				Expect(response.StatusCode).Should(Equal(http.StatusUnauthorized))
 
 				err = json.NewDecoder(response.Body).Decode(&expectAuthResponse)
+				DeferCleanup(response.Body.Close)
+
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(expectAuthResponse.Token).To(BeEmpty())
 				Expect(expectAuthResponse.Errors).NotTo(BeEmpty())
@@ -265,6 +275,8 @@ var _ = Describe("Handler", func() {
 				Expect(response.StatusCode).Should(Equal(http.StatusInternalServerError))
 
 				err = json.NewDecoder(response.Body).Decode(&expectAuthResponse)
+				DeferCleanup(response.Body.Close)
+
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(expectAuthResponse.Token).To(BeEmpty())
 				Expect(expectAuthResponse.Errors).NotTo(BeEmpty())
@@ -294,6 +306,8 @@ var _ = Describe("Handler", func() {
 				Expect(response.StatusCode).Should(Equal(http.StatusInternalServerError))
 
 				err = json.NewDecoder(response.Body).Decode(&expectAuthResponse)
+				DeferCleanup(response.Body.Close)
+
 				Expect(err).ShouldNot(HaveOccurred())
 				Expect(expectAuthResponse.Token).To(BeEmpty())
 				Expect(expectAuthResponse.Errors).NotTo(BeEmpty())
@@ -529,6 +543,8 @@ var _ = Describe("Handler", func() {
 
 				var info model.Info
 				err = json.NewDecoder(response.Body).Decode(&info)
+				DeferCleanup(response.Body.Close)
+
 				Expect(info.Coins).To(Equal(expectBalance))
 				Expect(info.Inventory).Should(HaveLen(len(expectInventory)))
 				Expect(info.CoinsHistory.Received).Should(HaveLen(len(expectHistory.Received)))
@@ -562,6 +578,8 @@ var _ = Describe("Handler", func() {
 
 				var info model.Info
 				err = json.NewDecoder(response.Body).Decode(&info)
+				DeferCleanup(response.Body.Close)
+
 				Expect(info.Coins).To(Equal(expectBalance))
 				Expect(info.Inventory).Should(HaveLen(len(expectInventory)))
 				Expect(info.CoinsHistory.Received).Should(HaveLen(len(expectHistory.Received)))
