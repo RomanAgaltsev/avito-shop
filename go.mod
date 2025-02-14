@@ -12,6 +12,7 @@ require (
 	github.com/lestrrat-go/jwx/v2 v2.1.3
 	github.com/onsi/ginkgo/v2 v2.22.2
 	github.com/onsi/gomega v1.36.2
+	github.com/pashagolub/pgxmock/v4 v4.5.0
 	github.com/pressly/goose/v3 v3.24.1
 	github.com/samber/slog-chi v1.13.1
 	go.uber.org/mock v0.5.0
