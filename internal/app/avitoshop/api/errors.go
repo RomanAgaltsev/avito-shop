@@ -19,7 +19,7 @@ var (
 type ErrorResponse struct {
 	Err        error  `json:"-"`
 	StatusCode int    `json:"-"`
-	StatusText string `json:"status_text"`
+	StatusText string `json:"status_text,omitempty"`
 	Message    string `json:"errors"`
 }
 
