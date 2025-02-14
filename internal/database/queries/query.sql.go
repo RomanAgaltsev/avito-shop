@@ -197,10 +197,8 @@ func (q *Queries) UpdateBalance(ctx context.Context, arg UpdateBalanceParams) (i
 
 const withdrawMerchFromBalance = `-- name: WithdrawMerchFromBalance :one
 UPDATE balance
-SET coins = coins - m.price
-FROM merch AS m
-LEFT JOIN balance AS b ON m.type = $2
-WHERE b.username = $1 RETURNING b.coins
+SET coins = coins - (SELECT price FROM merch WHERE type = $2)
+WHERE username = $1 RETURNING coins
 `
 
 type WithdrawMerchFromBalanceParams struct {
