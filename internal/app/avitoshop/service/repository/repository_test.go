@@ -47,6 +47,7 @@ var _ = Describe("Repository", func() {
 		bo.RandomizationFactor = 0.1
 		bo.Multiplier = 2.0
 		bo.MaxInterval = 1 * time.Second
+		bo.MaxElapsedTime = 2 * time.Second
 		bo.Reset()
 
 		mockPool, err = pgxmock.NewPool()
@@ -114,6 +115,55 @@ var _ = Describe("Repository", func() {
 				Expect(err).To(Equal(repository.ErrConflict))
 				Expect(expectUser.UserName).To(Equal(username))
 				Expect(expectUser.Password).To(Equal(password))
+			})
+		})
+
+	})
+
+	Context("Calling CreateBalance method", func() {
+		BeforeEach(func() {
+			username = "user"
+			password = "password"
+
+			user = model.User{
+				UserName: username,
+				Password: password,
+			}
+		})
+
+		When("balance doesn't exist", func() {
+			BeforeEach(func() {
+				rowID = 1
+
+				rs := pgxmock.NewRows([]string{"id"}).AddRow(rowID)
+				mockPool.ExpectQuery("INSERT INTO balance .+ VALUES .+").WithArgs(username).WillReturnRows(rs).Times(1)
+			})
+			AfterEach(func() {
+				err = mockPool.ExpectationsWereMet()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("returns nil error", func() {
+				err = repo.CreateBalance(ctx, bo, user)
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+		})
+
+		When("balance exists", func() {
+			BeforeEach(func() {
+				rowID = 0
+
+				rs := pgxmock.NewRows([]string{"id"}).AddRow(rowID).RowError(int(rowID), &pgconn.PgError{Code: pgerrcode.IntegrityConstraintViolation})
+				mockPool.ExpectQuery("INSERT INTO balance .+ VALUES .+").WithArgs(username).WillReturnRows(rs).Times(1)
+			})
+			AfterEach(func() {
+				err = mockPool.ExpectationsWereMet()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("returns an error", func() {
+				err = repo.CreateBalance(ctx, bo, user)
+				Expect(err).Should(HaveOccurred())
 			})
 		})
 
