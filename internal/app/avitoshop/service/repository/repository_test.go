@@ -436,7 +436,7 @@ var _ = Describe("Repository", func() {
 		})
 	})
 
-	XContext("Calling GetHistory method", func() {
+	Context("Calling GetHistory method", func() {
 		BeforeEach(func() {
 			username = "user"
 			password = "password"
@@ -445,6 +445,53 @@ var _ = Describe("Repository", func() {
 				UserName: username,
 				Password: password,
 			}
+		})
+
+		When("there is no error", func() {
+			BeforeEach(func() {
+				rowID = 1
+
+				var fromUser string = "user1"
+				var toUser string = ""
+				var amount int32 = 100
+				var sentAt time.Time = time.Now()
+
+				rs := pgxmock.NewRows([]string{"id", "username", "fromuser", "touser", "amount", "sentat"}).AddRow(rowID, username, fromUser, toUser, amount, sentAt)
+				mockPool.ExpectQuery("SELECT .+ FROM history .+").WithArgs(username).WillReturnRows(rs).Times(1)
+			})
+			AfterEach(func() {
+				err = mockPool.ExpectationsWereMet()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("returns an inventory and nil error", func() {
+				result, err := repo.GetHistory(ctx, bo, user)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(result.Received).Should(HaveLen(1))
+				Expect(result.Received[0].FromUser).Should(Equal("user1"))
+				Expect(result.Received[0].Amount).Should(Equal(100))
+				Expect(result.Sent).Should(HaveLen(0))
+			})
+		})
+
+		When("there is an error", func() {
+			BeforeEach(func() {
+				rowID = 0
+
+				rs := pgxmock.NewRows([]string{"id"}).AddRow(rowID).RowError(int(rowID), errSomethingStrange)
+				mockPool.ExpectQuery("SELECT .+ FROM history .+").WithArgs(username).WillReturnRows(rs).Times(1)
+			})
+			AfterEach(func() {
+				err = mockPool.ExpectationsWereMet()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("returns an empty inventory and an error", func() {
+				result, err := repo.GetHistory(ctx, bo, user)
+				Expect(err).Should(HaveOccurred())
+				Expect(result.Received).Should(HaveLen(0))
+				Expect(result.Sent).Should(HaveLen(0))
+			})
 		})
 	})
 })
