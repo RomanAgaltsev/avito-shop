@@ -143,7 +143,7 @@ func (h *Handler) BuyItem(w http.ResponseWriter, r *http.Request) {
 	// Get context from request
 	ctx := r.Context()
 
-	itemType := strings.TrimSuffix(r.URL.Path, "/api/buy/")
+	itemType := strings.TrimPrefix(r.URL.Path, "/api/buy/")
 	if itemType == "" {
 		_ = render.Render(w, r, ErrEmptyItem)
 		return
