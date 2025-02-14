@@ -179,7 +179,7 @@ var _ = Describe("Repository", func() {
 			}
 		})
 
-		When("everything is right", func() {
+		When("balance is enough to send", func() {
 			BeforeEach(func() {
 				rowID = 1
 
@@ -248,6 +248,121 @@ var _ = Describe("Repository", func() {
 			It("returns negative balance error", func() {
 				Expect(err).To(Equal(repository.ErrNegativeBalance))
 			})
+		})
+	})
+
+	Context("Calling BuyItem method", func() {
+		BeforeEach(func() {
+			username = "user"
+			password = "password"
+
+			user = model.User{
+				UserName: username,
+				Password: password,
+			}
+		})
+
+		When("balance is enough to buy", func() {
+			BeforeEach(func() {
+				rowID = 1
+
+				var balance int32 = 900
+				var itemType string = "book"
+
+				var item model.InventoryItem = model.InventoryItem{
+					Type:     itemType,
+					Quantity: 1,
+				}
+
+				mockPool.ExpectBegin()
+
+				rsWithdraw := pgxmock.NewRows([]string{"balance"}).AddRow(balance)
+				mockPool.ExpectQuery("UPDATE balance SET .+").WithArgs(username, itemType).WillReturnRows(rsWithdraw).Times(1)
+
+				rsCreate := pgxmock.NewRows([]string{"id"}).AddRow(rowID)
+				mockPool.ExpectQuery("INSERT INTO inventory .+ VALUES .+").WithArgs(username, itemType).WillReturnRows(rsCreate).Times(1)
+
+				mockPool.ExpectCommit()
+				mockPool.ExpectRollback()
+
+				err = repo.BuyItem(ctx, bo, user, item)
+			})
+			AfterEach(func() {
+				err = mockPool.ExpectationsWereMet()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("returns nil error", func() {
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+		})
+
+		When("balance is not enough to buy", func() {
+			BeforeEach(func() {
+				rowID = 1
+
+				var balance int32 = 90
+				var itemType string = "book"
+
+				var item model.InventoryItem = model.InventoryItem{
+					Type:     itemType,
+					Quantity: 1,
+				}
+
+				mockPool.ExpectBegin()
+
+				rsWithdraw := pgxmock.NewRows([]string{"balance"}).AddRow(-balance)
+				mockPool.ExpectQuery("UPDATE balance SET .+").WithArgs(username, itemType).WillReturnRows(rsWithdraw).Times(1)
+
+				mockPool.ExpectRollback()
+
+				err = repo.BuyItem(ctx, bo, user, item)
+			})
+			AfterEach(func() {
+				err = mockPool.ExpectationsWereMet()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("returns negative balance error", func() {
+				Expect(err).To(Equal(repository.ErrNegativeBalance))
+			})
+		})
+
+	})
+
+	XContext("Calling GetBalance method", func() {
+		BeforeEach(func() {
+			username = "user"
+			password = "password"
+
+			user = model.User{
+				UserName: username,
+				Password: password,
+			}
+		})
+	})
+
+	XContext("Calling GetInventory method", func() {
+		BeforeEach(func() {
+			username = "user"
+			password = "password"
+
+			user = model.User{
+				UserName: username,
+				Password: password,
+			}
+		})
+	})
+
+	XContext("Calling GetHistory method", func() {
+		BeforeEach(func() {
+			username = "user"
+			password = "password"
+
+			user = model.User{
+				UserName: username,
+				Password: password,
+			}
 		})
 	})
 
