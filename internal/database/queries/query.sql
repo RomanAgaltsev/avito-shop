@@ -32,13 +32,13 @@ VALUES ($1, $2, $3, $4) RETURNING id;
 
 -- name: CreateInventory :one
 INSERT INTO inventory (username, type, quantity)
-VALUES ($1, $2, quantity+1) RETURNING id;
+VALUES ($1, $2, 1) RETURNING id;
 
 -- name: GetInventory :many
-SELECT id, username, type, quantity, bought_at
+SELECT type, SUM(quantity) AS quantity
 FROM inventory
 WHERE username = $1
-ORDER BY bought_at;
+GROUP BY type;
 
 -- name: GetHistory :many
 SELECT id, username, from_user, to_user, amount, sent_at

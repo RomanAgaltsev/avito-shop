@@ -47,7 +47,7 @@ func (q *Queries) CreateHistoryRecord(ctx context.Context, arg CreateHistoryReco
 
 const createInventory = `-- name: CreateInventory :one
 INSERT INTO inventory (username, type, quantity)
-VALUES ($1, $2, quantity+1) RETURNING id
+VALUES ($1, $2, 1) RETURNING id
 `
 
 type CreateInventoryParams struct {
@@ -127,28 +127,27 @@ func (q *Queries) GetHistory(ctx context.Context, username string) ([]History, e
 }
 
 const getInventory = `-- name: GetInventory :many
-SELECT id, username, type, quantity, bought_at
+SELECT type, SUM(quantity) AS quantity
 FROM inventory
 WHERE username = $1
-ORDER BY bought_at
+GROUP BY type
 `
 
-func (q *Queries) GetInventory(ctx context.Context, username string) ([]Inventory, error) {
+type GetInventoryRow struct {
+	Type     string
+	Quantity int64
+}
+
+func (q *Queries) GetInventory(ctx context.Context, username string) ([]GetInventoryRow, error) {
 	rows, err := q.db.Query(ctx, getInventory, username)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Inventory
+	var items []GetInventoryRow
 	for rows.Next() {
-		var i Inventory
-		if err := rows.Scan(
-			&i.ID,
-			&i.Username,
-			&i.Type,
-			&i.Quantity,
-			&i.BoughtAt,
-		); err != nil {
+		var i GetInventoryRow
+		if err := rows.Scan(&i.Type, &i.Quantity); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

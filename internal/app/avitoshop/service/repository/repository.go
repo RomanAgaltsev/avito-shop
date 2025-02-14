@@ -263,7 +263,7 @@ func (r *Repository) GetBalance(ctx context.Context, bo *backoff.ExponentialBack
 
 func (r *Repository) GetInventory(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) ([]model.InventoryItem, error) {
 	// Get user inventory from DB
-	inventoryQuery, err := backoff.RetryWithData(func() ([]queries.Inventory, error) {
+	inventoryQuery, err := backoff.RetryWithData(func() ([]queries.GetInventoryRow, error) {
 		return r.q.GetInventory(ctx, user.UserName)
 	}, bo)
 
