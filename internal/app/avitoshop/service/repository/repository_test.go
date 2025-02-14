@@ -395,10 +395,9 @@ var _ = Describe("Repository", func() {
 				rowID = 1
 
 				var itemType string = "book"
-				var itemQuantity int32 = 1
-				var boughtAt time.Time = time.Now()
+				var itemQuantity int64 = 1
 
-				rs := pgxmock.NewRows([]string{"id", "username", "type", "quantity", "boughtat"}).AddRow(rowID, username, itemType, itemQuantity, boughtAt)
+				rs := pgxmock.NewRows([]string{"type", "quantity"}).AddRow(itemType, itemQuantity)
 				mockPool.ExpectQuery("SELECT .+ FROM inventory .+").WithArgs(username).WillReturnRows(rs).Times(1)
 			})
 			AfterEach(func() {
