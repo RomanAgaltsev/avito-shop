@@ -37,8 +37,8 @@ func (ar *AuthResponse) Render(w http.ResponseWriter, r *http.Request) error {
 // coins, inventory and transaction history.
 type Info struct {
 	Coins        int             `json:"coins"`
-	Inventory    []InventoryItem `json:"inventory"`
-	CoinsHistory CoinsHistory    `json:"coinHistory"`
+	Inventory    []InventoryItem `json:"inventory,omitempty"`
+	CoinsHistory CoinsHistory    `json:"coinHistory,omitempty"`
 }
 
 // Render tunes rendering of AuthResponse structure.
@@ -54,8 +54,8 @@ type InventoryItem struct {
 
 // CoinsHistory contains users coin transaction history.
 type CoinsHistory struct {
-	Received []CoinsReceiving `json:"received"`
-	Sent     []CoinsSending   `json:"sent"`
+	Received []CoinsReceiving `json:"received,omitempty"`
+	Sent     []CoinsSending   `json:"sent,omitempty"`
 }
 
 // CoinsReceiving is a coins receiving structure.
