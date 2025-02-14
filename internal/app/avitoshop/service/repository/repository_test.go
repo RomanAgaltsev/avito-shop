@@ -379,7 +379,7 @@ var _ = Describe("Repository", func() {
 		})
 	})
 
-	XContext("Calling GetInventory method", func() {
+	Context("Calling GetInventory method", func() {
 		BeforeEach(func() {
 			username = "user"
 			password = "password"
@@ -388,6 +388,51 @@ var _ = Describe("Repository", func() {
 				UserName: username,
 				Password: password,
 			}
+		})
+
+		When("there is no error", func() {
+			BeforeEach(func() {
+				rowID = 1
+
+				var itemType string = "book"
+				var itemQuantity int32 = 1
+				var boughtAt time.Time = time.Now()
+
+				rs := pgxmock.NewRows([]string{"id", "username", "type", "quantity", "boughtat"}).AddRow(rowID, username, itemType, itemQuantity, boughtAt)
+				mockPool.ExpectQuery("SELECT .+ FROM inventory .+").WithArgs(username).WillReturnRows(rs).Times(1)
+			})
+			AfterEach(func() {
+				err = mockPool.ExpectationsWereMet()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("returns an inventory and nil error", func() {
+				result, err := repo.GetInventory(ctx, bo, user)
+				Expect(err).ShouldNot(HaveOccurred())
+				Expect(result).ShouldNot(BeNil())
+				Expect(result).Should(HaveLen(1))
+				Expect(result[0].Type).To(Equal("book"))
+				Expect(result[0].Quantity).To(Equal(1))
+			})
+		})
+
+		When("there is an error", func() {
+			BeforeEach(func() {
+				rowID = 0
+
+				rs := pgxmock.NewRows([]string{"id"}).AddRow(rowID).RowError(int(rowID), errSomethingStrange)
+				mockPool.ExpectQuery("SELECT .+ FROM inventory .+").WithArgs(username).WillReturnRows(rs).Times(1)
+			})
+			AfterEach(func() {
+				err = mockPool.ExpectationsWereMet()
+				Expect(err).ShouldNot(HaveOccurred())
+			})
+
+			It("returns an empty inventory and an error", func() {
+				result, err := repo.GetInventory(ctx, bo, user)
+				Expect(err).Should(HaveOccurred())
+				Expect(result).Should(BeNil())
+			})
 		})
 	})
 
