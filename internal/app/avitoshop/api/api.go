@@ -110,6 +110,11 @@ func (h *Handler) SendCoins(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if fromUser.UserName == coinsSending.ToUser {
+		_ = render.Render(w, r, ErrSenderAndReceiverTheSame)
+		return
+	}
+
 	toUser := model.User{
 		UserName: coinsSending.ToUser,
 	}

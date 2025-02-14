@@ -7,13 +7,14 @@ import (
 )
 
 var (
-	ErrBadRequest          = &ErrorResponse{StatusCode: 400, Message: "Bad request"}
-	ErrEmptyItem           = &ErrorResponse{StatusCode: 400, Message: "Empty item"}
-	ErrNotEnoughCoins      = &ErrorResponse{StatusCode: 400, Message: "Not enough coins"}
-	ErrWrongLoginPassword  = &ErrorResponse{StatusCode: 401, Message: "Wrong login/password"}
-	ErrNotFound            = &ErrorResponse{StatusCode: 404, Message: "Resource not found"}
-	ErrMethodNotAllowed    = &ErrorResponse{StatusCode: 405, Message: "Method not allowed"}
-	ErrLoginIsAlreadyTaken = &ErrorResponse{StatusCode: 409, Message: "Login has already been taken"}
+	ErrBadRequest               = &ErrorResponse{StatusCode: 400, Message: "Bad request"}
+	ErrSenderAndReceiverTheSame = &ErrorResponse{StatusCode: 400, Message: "The sender and the receiver of coins are the same"}
+	ErrEmptyItem                = &ErrorResponse{StatusCode: 400, Message: "Empty item"}
+	ErrNotEnoughCoins           = &ErrorResponse{StatusCode: 400, Message: "Not enough coins"}
+	ErrWrongLoginPassword       = &ErrorResponse{StatusCode: 401, Message: "Wrong login/password"}
+	ErrNotFound                 = &ErrorResponse{StatusCode: 404, Message: "Resource not found"}
+	ErrMethodNotAllowed         = &ErrorResponse{StatusCode: 405, Message: "Method not allowed"}
+	ErrLoginIsAlreadyTaken      = &ErrorResponse{StatusCode: 409, Message: "Login has already been taken"}
 )
 
 type ErrorResponse struct {
