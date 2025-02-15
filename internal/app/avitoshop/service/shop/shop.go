@@ -20,6 +20,7 @@ var (
 	ErrUserNameIsAlreadyTaken = fmt.Errorf("user name has already been taken")
 	ErrWrongUserNamePassword  = fmt.Errorf("wrong username/password")
 	ErrNotEnoughBalance       = fmt.Errorf("not enough coins to send")
+	ErrNoSuchItem             = fmt.Errorf("no such item")
 )
 
 // Service is the user service interface.
@@ -107,6 +108,10 @@ func (s *service) SendCoins(ctx context.Context, fromUser model.User, toUser mod
 // BuyItem buys a given inventory item.
 func (s *service) BuyItem(ctx context.Context, user model.User, item model.InventoryItem) error {
 	err := s.repository.BuyItem(ctx, repository.DefaultBackOff, user, item)
+	if errors.Is(err, repository.ErrNoData) {
+		return ErrNoSuchItem
+	}
+
 	if errors.Is(err, repository.ErrNegativeBalance) {
 		return ErrNotEnoughBalance
 	}
