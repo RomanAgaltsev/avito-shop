@@ -266,16 +266,20 @@ var _ = Describe("Repository", func() {
 
 				var balance int32 = 900
 				var itemType string = "book"
+				var itemPrice int32 = 50
 
 				var item model.InventoryItem = model.InventoryItem{
 					Type:     itemType,
 					Quantity: 1,
 				}
 
+				rsGet := pgxmock.NewRows([]string{"id", "type", "price"}).AddRow(rowID, itemType, itemPrice)
+				mockPool.ExpectQuery("SELECT .+ FROM merch .+").WithArgs(itemType).WillReturnRows(rsGet).Times(1)
+
 				mockPool.ExpectBegin()
 
 				rsWithdraw := pgxmock.NewRows([]string{"balance"}).AddRow(balance)
-				mockPool.ExpectQuery("UPDATE balance SET .+").WithArgs(username, itemType).WillReturnRows(rsWithdraw).Times(1)
+				mockPool.ExpectQuery("UPDATE balance SET .+").WithArgs(username, -itemPrice).WillReturnRows(rsWithdraw).Times(1)
 
 				rsCreate := pgxmock.NewRows([]string{"id"}).AddRow(rowID)
 				mockPool.ExpectQuery("INSERT INTO inventory .+ VALUES .+").WithArgs(username, itemType).WillReturnRows(rsCreate).Times(1)
@@ -301,16 +305,20 @@ var _ = Describe("Repository", func() {
 
 				var balance int32 = 90
 				var itemType string = "book"
+				var itemPrice int32 = 100
 
 				var item model.InventoryItem = model.InventoryItem{
 					Type:     itemType,
 					Quantity: 1,
 				}
 
+				rsGet := pgxmock.NewRows([]string{"id", "type", "price"}).AddRow(rowID, itemType, itemPrice)
+				mockPool.ExpectQuery("SELECT .+ FROM merch .+").WithArgs(itemType).WillReturnRows(rsGet).Times(1)
+
 				mockPool.ExpectBegin()
 
 				rsWithdraw := pgxmock.NewRows([]string{"balance"}).AddRow(-balance)
-				mockPool.ExpectQuery("UPDATE balance SET .+").WithArgs(username, itemType).WillReturnRows(rsWithdraw).Times(1)
+				mockPool.ExpectQuery("UPDATE balance SET .+").WithArgs(username, -itemPrice).WillReturnRows(rsWithdraw).Times(1)
 
 				mockPool.ExpectRollback()
 

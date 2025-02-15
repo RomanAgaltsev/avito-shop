@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"database/sql"
 	"errors"
 	"fmt"
 
@@ -16,6 +17,7 @@ import (
 )
 
 var (
+	ErrNoData          = fmt.Errorf("no data")
 	ErrConflict        = fmt.Errorf("data conflict")
 	ErrNegativeBalance = fmt.Errorf("negative balance")
 
@@ -203,6 +205,18 @@ func (r *Repository) SendCoins(ctx context.Context, bo *backoff.ExponentialBackO
 
 // BuyItem register purhcase of inventory item (merch) for a given user.
 func (r *Repository) BuyItem(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User, item model.InventoryItem) error {
+	// Get merch from DB
+	merch, err := backoff.RetryWithData(func() (queries.Merch, error) {
+		return r.q.GetMerch(ctx, item.Type)
+	}, bo)
+
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+	if errors.Is(err, sql.ErrNoRows) {
+		return ErrNoData
+	}
+
 	// Begin transaction
 	tx, err := r.db.Begin(ctx)
 	if err != nil {
@@ -216,9 +230,9 @@ func (r *Repository) BuyItem(ctx context.Context, bo *backoff.ExponentialBackOff
 
 	// Withdraw merch price from the balance of the user
 	userBalance, err := backoff.RetryWithData(func() (int32, error) {
-		return qtx.WithdrawMerchFromBalance(ctx, queries.WithdrawMerchFromBalanceParams{
+		return qtx.UpdateBalance(ctx, queries.UpdateBalanceParams{
 			Username: user.UserName,
-			Type:     item.Type,
+			Coins:    -merch.Price,
 		})
 	}, bo)
 	if err != nil {
