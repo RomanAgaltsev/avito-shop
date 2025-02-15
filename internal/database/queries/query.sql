@@ -21,10 +21,10 @@ UPDATE balance
 SET coins = coins + $2
 WHERE username = $1 RETURNING coins;
 
--- name: WithdrawMerchFromBalance :one
-UPDATE balance
-SET coins = coins - (SELECT price FROM merch WHERE type = $2)
-WHERE username = $1 RETURNING coins;
+-- name: GetMerch :one
+SELECT id, type, price
+FROM merch
+WHERE type = $1 LIMIT 1;
 
 -- name: CreateHistoryRecord :one
 INSERT INTO history (username, from_user, to_user, amount)

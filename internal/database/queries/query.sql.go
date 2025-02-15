@@ -158,6 +158,19 @@ func (q *Queries) GetInventory(ctx context.Context, username string) ([]GetInven
 	return items, nil
 }
 
+const getMerch = `-- name: GetMerch :one
+SELECT id, type, price
+FROM merch
+WHERE type = $1 LIMIT 1
+`
+
+func (q *Queries) GetMerch(ctx context.Context, type_ string) (Merch, error) {
+	row := q.db.QueryRow(ctx, getMerch, type_)
+	var i Merch
+	err := row.Scan(&i.ID, &i.Type, &i.Price)
+	return i, err
+}
+
 const getUser = `-- name: GetUser :one
 SELECT id, username, password, created_at
 FROM users
@@ -189,24 +202,6 @@ type UpdateBalanceParams struct {
 
 func (q *Queries) UpdateBalance(ctx context.Context, arg UpdateBalanceParams) (int32, error) {
 	row := q.db.QueryRow(ctx, updateBalance, arg.Username, arg.Coins)
-	var coins int32
-	err := row.Scan(&coins)
-	return coins, err
-}
-
-const withdrawMerchFromBalance = `-- name: WithdrawMerchFromBalance :one
-UPDATE balance
-SET coins = coins - (SELECT price FROM merch WHERE type = $2)
-WHERE username = $1 RETURNING coins
-`
-
-type WithdrawMerchFromBalanceParams struct {
-	Username string
-	Type     string
-}
-
-func (q *Queries) WithdrawMerchFromBalance(ctx context.Context, arg WithdrawMerchFromBalanceParams) (int32, error) {
-	row := q.db.QueryRow(ctx, withdrawMerchFromBalance, arg.Username, arg.Type)
 	var coins int32
 	err := row.Scan(&coins)
 	return coins, err
