@@ -10,6 +10,7 @@ var (
 	ErrBadRequest               = &ErrorResponse{StatusCode: 400, Message: "Bad request"}
 	ErrSenderAndReceiverTheSame = &ErrorResponse{StatusCode: 400, Message: "The sender and the receiver of coins are the same"}
 	ErrEmptyItem                = &ErrorResponse{StatusCode: 400, Message: "Empty item"}
+	ErrUnknownMerch             = &ErrorResponse{StatusCode: 400, Message: "Unkown merch"}
 	ErrNotEnoughCoins           = &ErrorResponse{StatusCode: 400, Message: "Not enough coins"}
 	ErrWrongLoginPassword       = &ErrorResponse{StatusCode: 401, Message: "Wrong login/password"}
 	ErrNotFound                 = &ErrorResponse{StatusCode: 404, Message: "Resource not found"}

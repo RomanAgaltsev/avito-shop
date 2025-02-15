@@ -162,6 +162,12 @@ func (h *Handler) BuyItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.service.BuyItem(ctx, user, item)
+	if err != nil && errors.Is(err, shop.ErrNoSuchItem) {
+		slog.Info(msgBuyItem, argError, err.Error())
+		_ = render.Render(w, r, ErrUnknownMerch)
+		return
+	}
+
 	if err != nil && errors.Is(err, shop.ErrNotEnoughBalance) {
 		slog.Info(msgBuyItem, argError, err.Error())
 		_ = render.Render(w, r, ErrNotEnoughCoins)
