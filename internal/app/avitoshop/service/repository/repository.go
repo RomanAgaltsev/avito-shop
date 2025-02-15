@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/cenkalti/backoff/v4"
 	"github.com/jackc/pgerrcode"
@@ -20,8 +21,7 @@ var (
 	ErrNoData          = fmt.Errorf("no data")
 	ErrConflict        = fmt.Errorf("data conflict")
 	ErrNegativeBalance = fmt.Errorf("negative balance")
-
-	DefaultBackOff = backoff.NewExponentialBackOff()
+	DefaultBackOff     = NewDefaultBackOff()
 )
 
 // conflictUser contains confict user and an error.
@@ -333,4 +333,15 @@ func (r *Repository) GetHistory(ctx context.Context, bo *backoff.ExponentialBack
 	}
 
 	return coinHistory, nil
+}
+
+func NewDefaultBackOff() *backoff.ExponentialBackOff {
+	bo := backoff.NewExponentialBackOff()
+	bo.InitialInterval = 50 * time.Millisecond
+	bo.RandomizationFactor = 0.1
+	bo.Multiplier = 2.0
+	bo.MaxInterval = 1 * time.Second
+	bo.MaxElapsedTime = 5 * time.Second
+	bo.Reset()
+	return bo
 }
