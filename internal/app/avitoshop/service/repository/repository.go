@@ -311,7 +311,7 @@ func (r *Repository) GetInventory(ctx context.Context, bo *backoff.ExponentialBa
 
 func (r *Repository) GetHistory(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) (model.CoinsHistory, error) {
 	// Get history of user transactions from DB
-	historyQuery, err := backoff.RetryWithData(func() ([]queries.History, error) {
+	historyQuery, err := backoff.RetryWithData(func() ([]queries.GetHistoryRow, error) {
 		return r.q.GetHistory(ctx, user.UserName)
 	}, bo)
 

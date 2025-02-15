@@ -468,10 +468,9 @@ var _ = Describe("Repository", func() {
 
 				var fromUser string = "user1"
 				var toUser string = ""
-				var amount int32 = 100
-				var sentAt time.Time = time.Now()
+				var amount int64 = 100
 
-				rs := pgxmock.NewRows([]string{"id", "username", "fromuser", "touser", "amount", "sentat"}).AddRow(rowID, username, fromUser, toUser, amount, sentAt)
+				rs := pgxmock.NewRows([]string{"fromuser", "touser", "amount"}).AddRow(fromUser, toUser, amount)
 				mockPool.ExpectQuery("SELECT .+ FROM history .+").WithArgs(username).WillReturnRows(rs).Times(1)
 			})
 			AfterEach(func() {
