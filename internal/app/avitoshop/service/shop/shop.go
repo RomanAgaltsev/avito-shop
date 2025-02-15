@@ -21,6 +21,7 @@ var (
 	ErrWrongUserNamePassword  = fmt.Errorf("wrong username/password")
 	ErrNotEnoughBalance       = fmt.Errorf("not enough coins to send")
 	ErrNoSuchItem             = fmt.Errorf("no such item")
+	ErrNoSuchUser             = fmt.Errorf("no such user to send coins")
 )
 
 // Service is the user service interface.
@@ -94,6 +95,9 @@ func (s *service) UserBalance(ctx context.Context, user model.User) error {
 // SendCoins sends given amount of coins from one user to another.
 func (s *service) SendCoins(ctx context.Context, fromUser model.User, toUser model.User, amount int) error {
 	err := s.repository.SendCoins(ctx, repository.DefaultBackOff, fromUser, toUser, amount)
+	if errors.Is(err, repository.ErrNoData) {
+		return ErrNoSuchUser
+	}
 	if errors.Is(err, repository.ErrNegativeBalance) {
 		return ErrNotEnoughBalance
 	}
@@ -111,7 +115,6 @@ func (s *service) BuyItem(ctx context.Context, user model.User, item model.Inven
 	if errors.Is(err, repository.ErrNoData) {
 		return ErrNoSuchItem
 	}
-
 	if errors.Is(err, repository.ErrNegativeBalance) {
 		return ErrNotEnoughBalance
 	}
