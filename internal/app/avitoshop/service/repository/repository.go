@@ -132,6 +132,18 @@ func (r *Repository) CreateBalance(ctx context.Context, bo *backoff.ExponentialB
 
 // SendCoins transfer given amount of coins from one user to another.
 func (r *Repository) SendCoins(ctx context.Context, bo *backoff.ExponentialBackOff, fromUser model.User, toUser model.User, amount int) error {
+	// Get user from DB
+	_, err := backoff.RetryWithData(func() (queries.User, error) {
+		return r.q.GetUser(ctx, toUser.UserName)
+	}, bo)
+
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
+		return err
+	}
+	if errors.Is(err, sql.ErrNoRows) {
+		return ErrNoData
+	}
+
 	// Begin transaction
 	tx, err := r.db.Begin(ctx)
 	if err != nil {

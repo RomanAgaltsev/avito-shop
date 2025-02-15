@@ -188,6 +188,10 @@ var _ = Describe("Repository", func() {
 					UserName: "user1",
 					Password: "password1",
 				}
+				var toUserCreatedAt time.Time = time.Now()
+
+				rsGet := pgxmock.NewRows([]string{"id", "username", "password", "createdat"}).AddRow(rowID, toUser.UserName, toUser.Password, toUserCreatedAt)
+				mockPool.ExpectQuery("SELECT .+ FROM users .+").WithArgs(toUser.UserName).WillReturnRows(rsGet).Times(1)
 
 				mockPool.ExpectBegin()
 
@@ -228,6 +232,10 @@ var _ = Describe("Repository", func() {
 					UserName: "user1",
 					Password: "password1",
 				}
+				var toUserCreatedAt time.Time = time.Now()
+
+				rsGet := pgxmock.NewRows([]string{"id", "username", "password", "createdat"}).AddRow(rowID, toUser.UserName, toUser.Password, toUserCreatedAt)
+				mockPool.ExpectQuery("SELECT .+ FROM users .+").WithArgs(toUser.UserName).WillReturnRows(rsGet).Times(1)
 
 				mockPool.ExpectBegin()
 
