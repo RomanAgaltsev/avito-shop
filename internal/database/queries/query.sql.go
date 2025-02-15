@@ -93,29 +93,28 @@ func (q *Queries) GetBalance(ctx context.Context, username string) (Balance, err
 }
 
 const getHistory = `-- name: GetHistory :many
-SELECT id, username, from_user, to_user, amount, sent_at
+SELECT from_user, to_user, SUM(amount) AS amount
 FROM history
 WHERE username = $1
-ORDER BY sent_at
+GROUP BY from_user, to_user
 `
 
-func (q *Queries) GetHistory(ctx context.Context, username string) ([]History, error) {
+type GetHistoryRow struct {
+	FromUser string
+	ToUser   string
+	Amount   int64
+}
+
+func (q *Queries) GetHistory(ctx context.Context, username string) ([]GetHistoryRow, error) {
 	rows, err := q.db.Query(ctx, getHistory, username)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []History
+	var items []GetHistoryRow
 	for rows.Next() {
-		var i History
-		if err := rows.Scan(
-			&i.ID,
-			&i.Username,
-			&i.FromUser,
-			&i.ToUser,
-			&i.Amount,
-			&i.SentAt,
-		); err != nil {
+		var i GetHistoryRow
+		if err := rows.Scan(&i.FromUser, &i.ToUser, &i.Amount); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

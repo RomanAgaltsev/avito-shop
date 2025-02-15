@@ -41,7 +41,7 @@ WHERE username = $1
 GROUP BY type;
 
 -- name: GetHistory :many
-SELECT id, username, from_user, to_user, amount, sent_at
+SELECT from_user, to_user, SUM(amount) AS amount
 FROM history
 WHERE username = $1
-ORDER BY sent_at;
+GROUP BY from_user, to_user;
