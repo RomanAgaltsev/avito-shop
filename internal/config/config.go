@@ -31,7 +31,7 @@ func newConfigBuilder() *configBuilder {
 
 // setDefaults defines application configuration parameters defaults.
 func (cb *configBuilder) setDefaults() error {
-	cb.runAddress = "localhost:8080"
+	cb.runAddress = ":8080"
 	cb.databaseURI = ""
 	cb.secretKey = "secret"
 

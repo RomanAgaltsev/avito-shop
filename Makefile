@@ -61,7 +61,7 @@ dc-build:	# Build docker compose
 
 .PHONY: dc-up
 dc-up:	# Build docker compose
-	docker-compose -f deployments/compose.yaml -f deployments/avitoshop/compose.yaml -f deployments/postgres/compose.yaml --env-file .env up
+	docker-compose -f deployments/compose.yaml -f deployments/avitoshop/compose.yaml -f deployments/postgres/compose.yaml --env-file .env up -d
 
 .PHONY: dc-down
 dc-down:	# Build docker compose
