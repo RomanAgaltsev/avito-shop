@@ -15,6 +15,10 @@ func init() {
 }
 
 func TestEnd2end(t *testing.T) {
+	if testing.Short() {
+        t.Skip("skipping test in short mode.")
+    }
+
 	RegisterFailHandler(Fail)
 	RunSpecs(t, "End2End Suite")
 }

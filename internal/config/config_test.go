@@ -34,10 +34,10 @@ var _ = Describe("Config", func() {
 	// Run address
 	ra := &testCase{
 		envNam: "RUN_ADDRESS",
-		envVal: "localhost:8081",
+		envVal: ":8081",
 		flgNam: "-a",
-		flgVal: "localhost:8091",
-		defVal: "localhost:8080",
+		flgVal: ":8091",
+		defVal: ":8080",
 	}
 
 	DescribeTable("Run address",

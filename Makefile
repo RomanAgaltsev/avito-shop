@@ -12,8 +12,12 @@ secretkey = secret
 gen-mock:	# Generate mocks
 	go generate ./...
 
-.PHONY: test
-test:	# Execute the unit tests
+.PHONY: test-unit
+test-unit:	# Execute the unit tests
+	go test -short -count=1 -v -timeout 30s -coverprofile cover.out ./...
+
+.PHONY: test-e2e
+test-e2e:	# Execute the unit and E2E tests
 	go test -count=1 -v -timeout 30s -coverprofile cover.out ./...
 
 .PHONY: lint
