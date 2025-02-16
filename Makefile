@@ -55,6 +55,10 @@ build:	# Build application binary
 run:	# Run the application
 	./cmd/avitoshop/avitoshop -d="postgres://$(pguser):$(pguserpass)@$(pguri)/$(dbname)" -k=$(secretkey)
 
+.PHONY: doc
+doc:	# godoc
+	godoc -http=:6060
+
 # ==============================================================================
 
 #  Docker commands
