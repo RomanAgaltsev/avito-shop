@@ -78,5 +78,8 @@ func (cs *CoinsSending) Bind(r *http.Request) error {
 	if cs.Amount == 0 {
 		return fmt.Errorf("amount is a required field")
 	}
+	if cs.Amount < 0 {
+		return fmt.Errorf("amount is negative")
+	}
 	return nil
 }
