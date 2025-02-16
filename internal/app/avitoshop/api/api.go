@@ -1,3 +1,4 @@
+// Package api implements handlers for incoming http-requests and the router.
 package api
 
 import (
@@ -54,16 +55,15 @@ func (h *Handler) Auth(w http.ResponseWriter, r *http.Request) {
 
 	// Auth user
 	err := h.service.UserAuth(ctx, user)
-	//
+	// Check if user password is correct
 	if err != nil && errors.Is(err, shop.ErrWrongUserNamePassword) {
 		// There is a problem with login/password
 		slog.Info(msgUserAuth, argError, err.Error())
 		_ = render.Render(w, r, ErrWrongLoginPassword)
 		return
 	}
-	//
+	// Check if something has gone wrong
 	if err != nil && !errors.Is(err, shop.ErrWrongUserNamePassword) {
-		// Something has gone wrong
 		slog.Info(msgUserAuth, argError, err.Error())
 		_ = render.Render(w, r, ServerErrorRenderer(err))
 		return
@@ -79,8 +79,10 @@ func (h *Handler) Auth(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Set status
 	render.Status(r, http.StatusOK)
 
+	// Create a struct to return
 	authResponse := model.AuthResponse{
 		Token: tokenString,
 	}
@@ -104,12 +106,14 @@ func (h *Handler) SendCoins(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// Get coins sending struct from request
 	var coinsSending model.CoinsSending
 	if err = render.Bind(r, &coinsSending); err != nil {
 		_ = render.Render(w, r, ErrorRenderer(err))
 		return
 	}
 
+	// Check if sender and receiver of coins are the same
 	if fromUser.UserName == coinsSending.ToUser {
 		_ = render.Render(w, r, ErrSenderAndReceiverTheSame)
 		return
@@ -122,11 +126,13 @@ func (h *Handler) SendCoins(w http.ResponseWriter, r *http.Request) {
 
 	// Send coins
 	err = h.service.SendCoins(ctx, fromUser, toUser, amount)
+	// Check if user does not exist
 	if err != nil && errors.Is(err, shop.ErrNoSuchUser) {
 		slog.Info(msgBuyItem, argError, err.Error())
 		_ = render.Render(w, r, ErrUnknownUser)
 		return
 	}
+	// Check if user enough balance
 	if err != nil && errors.Is(err, shop.ErrNotEnoughBalance) {
 		slog.Info(msgSendCoins, argError, err.Error())
 		_ = render.Render(w, r, ErrNotEnoughCoins)
@@ -167,11 +173,13 @@ func (h *Handler) BuyItem(w http.ResponseWriter, r *http.Request) {
 	}
 
 	err = h.service.BuyItem(ctx, user, item)
+	// Check if there is no such item
 	if err != nil && errors.Is(err, shop.ErrNoSuchItem) {
 		slog.Info(msgBuyItem, argError, err.Error())
 		_ = render.Render(w, r, ErrUnknownMerch)
 		return
 	}
+	// Check if user enough balance
 	if err != nil && errors.Is(err, shop.ErrNotEnoughBalance) {
 		slog.Info(msgBuyItem, argError, err.Error())
 		_ = render.Render(w, r, ErrNotEnoughCoins)

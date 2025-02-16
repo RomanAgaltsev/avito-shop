@@ -1,3 +1,4 @@
+// Package shop implements business logic off the application.
 package shop
 
 import (

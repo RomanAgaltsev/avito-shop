@@ -1,3 +1,4 @@
+// Package httpserver provides http-server creation.
 package httpserver
 
 import (

@@ -1,3 +1,4 @@
+// Package model contains application data structs.
 package model
 
 import (

@@ -1,3 +1,4 @@
+// Package repository provides for interaction with DB.
 package repository
 
 import (
@@ -18,10 +19,17 @@ import (
 )
 
 var (
-	ErrNoData          = fmt.Errorf("no data")
-	ErrConflict        = fmt.Errorf("data conflict")
+	// ErrNoData error means that query has returned no data from DB.
+	ErrNoData = fmt.Errorf("no data")
+
+	// ErrConflict error means that there was a data conflict while execute a query.
+	ErrConflict = fmt.Errorf("data conflict")
+
+	// ErrNegativeBalance error means that user balance would become neagive if transaction being commited.
 	ErrNegativeBalance = fmt.Errorf("negative balance")
-	DefaultBackOff     = NewDefaultBackOff()
+
+	// DefaultBackOff - default backoff parameters.
+	DefaultBackOff = NewDefaultBackOff()
 )
 
 // conflictUser contains confict user and an error.
@@ -274,6 +282,7 @@ func (r *Repository) BuyItem(ctx context.Context, bo *backoff.ExponentialBackOff
 	return tx.Commit(ctx)
 }
 
+// GetBalance returns users coins balance.
 func (r *Repository) GetBalance(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) (int, error) {
 	// Get user balance from DB
 	userBalance, err := backoff.RetryWithData(func() (queries.Balance, error) {
@@ -287,6 +296,7 @@ func (r *Repository) GetBalance(ctx context.Context, bo *backoff.ExponentialBack
 	return int(userBalance.Coins), nil
 }
 
+// GetInventory returns users inventory.
 func (r *Repository) GetInventory(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) ([]model.InventoryItem, error) {
 	// Get user inventory from DB
 	inventoryQuery, err := backoff.RetryWithData(func() ([]queries.GetInventoryRow, error) {
@@ -309,6 +319,7 @@ func (r *Repository) GetInventory(ctx context.Context, bo *backoff.ExponentialBa
 	return inventory, nil
 }
 
+// GetHistory returns users coins transaction history.
 func (r *Repository) GetHistory(ctx context.Context, bo *backoff.ExponentialBackOff, user model.User) (model.CoinsHistory, error) {
 	// Get history of user transactions from DB
 	historyQuery, err := backoff.RetryWithData(func() ([]queries.GetHistoryRow, error) {
@@ -347,6 +358,7 @@ func (r *Repository) GetHistory(ctx context.Context, bo *backoff.ExponentialBack
 	return coinHistory, nil
 }
 
+// NewDefaultBackOff returns default backoff parameters.
 func NewDefaultBackOff() *backoff.ExponentialBackOff {
 	bo := backoff.NewExponentialBackOff()
 	bo.InitialInterval = 50 * time.Millisecond

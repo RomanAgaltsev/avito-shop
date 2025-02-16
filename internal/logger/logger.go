@@ -1,3 +1,4 @@
+// Package logger initializes slog+zap logger.
 package logger
 
 import (
