@@ -1,0 +1,5 @@
+name: avitoshop
+
+networks:
+    avitoshop-network:
+        driver: bridge

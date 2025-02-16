@@ -1,0 +1,30 @@
+services:
+    avitoshop:
+        build:
+            context: ../
+            dockerfile: ./deployments/avitoshop/Dockerfile
+        image: avitoshop
+        container_name: avitoshop
+        hostname: avitoshop
+        ports:
+            - "8080:8080"
+            - "40000:40000"
+        restart: always
+        environment:
+            RUN_ADDRESS: ${RUN_ADDRESS:?Please specify the RUN_ADDRESS variable in the .env file}
+            DATABASE_URI: ${DATABASE_URI:?Please specify the DATABASE_URI variable in the .env file}
+            SECRET_KEY: ${SECRET_KEY:?Please specify the SECRET_KEY variable in the .env file}
+        security_opt:
+            - "seccomp:unconfined"
+        cap_add:
+            - SYS_PTRACE
+        command:
+            - /dlv --headless --listen=:40000 --api-version=2 exec /server
+        deploy:
+            restart_policy:
+                condition: on-failure
+        networks:
+            - avitoshop-network
+        depends_on:
+            postgres:
+                condition: service_healthy
