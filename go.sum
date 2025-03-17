@@ -75,8 +75,8 @@ github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec h1:W09IVJc94
 github.com/remyoudompheng/bigfft v0.0.0-20230129092748-24d4a6f8daec/go.mod h1:qqbHyh8v60DhA7CoWK5oRCqLrMHRGoxYCSS9EjAz6Eo=
 github.com/rogpeppe/go-internal v1.13.1 h1:KvO1DLK/DRN07sQ1LQKScxyZJuNnedQ5/wKSR38lUII=
 github.com/rogpeppe/go-internal v1.13.1/go.mod h1:uMEvuHeurkdAXX61udpOXGD/AzZDWNMNyH2VO9fmH0o=
-github.com/samber/slog-chi v1.13.1 h1:398azB2Anob+DFivZcky9XVx4KnJJ+rNGqTETteuvtc=
-github.com/samber/slog-chi v1.13.1/go.mod h1:NczezQS5y/GrpUjwiW0f+ahrPDonyl9em381jGHW3zg=
+github.com/samber/slog-chi v1.14.0 h1:5Jdi9QPrnn8r3sqPhSR+xRv8c7NgRf1UDdDhzrNt+iA=
+github.com/samber/slog-chi v1.14.0/go.mod h1:W8FfgeySPYJPztBLA4Pc7J0vY7OrazTLGH3jmWqSiRY=
 github.com/segmentio/asm v1.2.0 h1:9BQrFxC+YOHJlTlHGkTrFWf59nbL3XnCoFLTwDCI7ys=
 github.com/segmentio/asm v1.2.0/go.mod h1:BqMnlJP91P8d+4ibuonYZw9mfnzI9HfxselHZr5aAcs=
 github.com/sethvargo/go-retry v0.3.0 h1:EEt31A35QhrcRZtrYFDTBg91cqZVnFL2navjDrah2SE=
