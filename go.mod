@@ -1,7 +1,6 @@
 module github.com/RomanAgaltsev/avito-shop
 
 go 1.23.6
-
 require (
 	github.com/cenkalti/backoff/v4 v4.3.0
 	github.com/go-chi/chi/v5 v5.2.1
@@ -14,7 +13,7 @@ require (
 	github.com/onsi/gomega v1.36.2
 	github.com/pashagolub/pgxmock/v4 v4.5.0
 	github.com/pressly/goose/v3 v3.24.1
-	github.com/samber/slog-chi v1.13.1
+	github.com/samber/slog-chi v1.14.0
 	go.uber.org/mock v0.5.0
 	go.uber.org/zap v1.27.0
 	go.uber.org/zap/exp v0.3.0
